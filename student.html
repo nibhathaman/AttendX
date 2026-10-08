@@ -216,7 +216,7 @@
 
             if (error) {
                 console.error(error);
-                alert("Attendance could not be saved.");
+                alert("SUPABASE ERROR: " + JSON.stringify(error));
                 return false;
             }
 
