@@ -13,6 +13,9 @@
     <link rel="stylesheet"
         href="style.css">
 
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 
 <body>
@@ -63,15 +66,16 @@
 
 
             <h3>Attendance Records</h3>
+
             <button onclick="downloadAttendanceReport()">
-             Download Attendance Report
+                Download Attendance Report
             </button>
 
 
             <div id="attendanceList">
 
                 <p>
-                    No attendance records yet.
+                    Loading attendance records...
                 </p>
 
             </div>
@@ -82,6 +86,133 @@
 
 
     <script src="script.js"></script>
+
+
+    <script>
+
+        // --------------------------------
+        // SUPABASE CONNECTION
+        // --------------------------------
+
+        const attendanceSupabase =
+            window.supabase.createClient(
+                "https://drmhmtjhubswubvlkqvq.supabase.co",
+                "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP"
+            );
+
+
+        // --------------------------------
+        // LOAD ATTENDANCE
+        // --------------------------------
+
+        async function loadAttendanceFromSupabase() {
+
+            const session =
+                JSON.parse(
+                    localStorage.getItem("attendanceSession")
+                );
+
+
+            if (!session) {
+
+                document.getElementById("sessionId").innerText =
+                    "No session found";
+
+                document.getElementById("sessionStatus").innerText =
+                    "No session found";
+
+                document.getElementById("attendanceList").innerHTML =
+                    "<p>No attendance session found.</p>";
+
+                return;
+
+            }
+
+
+            document.getElementById("sessionId").innerText =
+                session.sessionId;
+
+            document.getElementById("sessionStatus").innerText =
+                session.status;
+
+
+            const { data, error } =
+                await attendanceSupabase
+                    .from("attendance")
+                    .select("*")
+                    .eq("session_id", session.sessionId);
+
+
+            if (error) {
+
+                console.error(error);
+
+                document.getElementById("attendanceList").innerHTML =
+                    "<p>Error loading attendance records.</p>";
+
+                alert(
+                    "SUPABASE ERROR: " +
+                    error.message
+                );
+
+                return;
+
+            }
+
+
+            document.getElementById("totalPresent").innerText =
+                data.length;
+
+
+            const attendanceList =
+                document.getElementById("attendanceList");
+
+
+            if (data.length === 0) {
+
+                attendanceList.innerHTML =
+                    "<p>No attendance records yet.</p>";
+
+                return;
+
+            }
+
+
+            attendanceList.innerHTML = "";
+
+
+            data.forEach(function(record, index) {
+
+                const recordDiv =
+                    document.createElement("div");
+
+                recordDiv.innerHTML = `
+                    <p>
+                        <strong>${index + 1}.</strong>
+                        ${record.name}
+                        |
+                        ${record.roll_number}
+                        |
+                        ${record.status}
+                        |
+                        ${record.attendance_time}
+                    </p>
+                `;
+
+                attendanceList.appendChild(recordDiv);
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // LOAD WHEN PAGE OPENS
+        // --------------------------------
+
+        loadAttendanceFromSupabase();
+
+    </script>
 
 </body>
 
