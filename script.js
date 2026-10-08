@@ -1,4 +1,3 @@
-```javascript
 const SUPABASE_URL =
     "https://drmhmtjhubswubvlkqvq.supabase.co";
 
@@ -724,40 +723,25 @@ function isQRExpired(
 function startScanner() {
 
     const scanner =
-        new Html5Qrcode(
-            "reader"
-        );
-
+        new Html5Qrcode("reader");
 
     scanner.start(
 
-        {
-            facingMode:
-                "environment"
-        },
+        { facingMode: "environment" },
 
         {
-
-            fps:
-                10,
-
-            qrbox:
-                250
-
+            fps: 10,
+            qrbox: 250
         },
 
         async (decodedText) => {
 
-            scanner.stop();
-
+            await scanner.stop();
 
             const lockedStudent =
                 JSON.parse(
-                    localStorage.getItem(
-                        "lockedStudent"
-                    )
+                    localStorage.getItem("lockedStudent")
                 );
-
 
             if (!lockedStudent) {
 
@@ -768,70 +752,22 @@ function startScanner() {
                 return;
             }
 
-
             const name =
                 lockedStudent.name;
-
 
             const rollNumber =
                 lockedStudent.rollNumber;
 
 
-            const currentSession =
-                JSON.parse(
-                    localStorage.getItem(
-                        "attendanceSession"
-                    )
-                );
-
-
-            if (!currentSession) {
-
-                alert(
-                    "No active attendance session found."
-                );
-
-                return;
-            }
-
-
-            if (
-                currentSession.status !==
-                "Active"
-            ) {
-
-                alert(
-                    "This attendance session has ended."
-                );
-
-                return;
-            }
-
+            // Get session directly from scanned QR
 
             const scannedSessionId =
-                getSessionIdFromQR(
-                    decodedText
-                );
+                getSessionIdFromQR(decodedText);
 
 
-            if (
-                scannedSessionId !==
-                currentSession.sessionId
-            ) {
+            // Check QR expiry
 
-                alert(
-                    "This QR does not belong to the active attendance session."
-                );
-
-                return;
-            }
-
-
-            if (
-                isQRExpired(
-                    decodedText
-                )
-            ) {
+            if (isQRExpired(decodedText)) {
 
                 alert(
                     "This QR has expired. Please scan the latest QR."
@@ -840,6 +776,20 @@ function startScanner() {
                 return;
             }
 
+
+            // Check session ID
+
+            if (!scannedSessionId) {
+
+                alert(
+                    "Invalid attendance QR."
+                );
+
+                return;
+            }
+
+
+            // Check duplicate attendance locally
 
             let attendanceRecords =
                 JSON.parse(
@@ -869,6 +819,8 @@ function startScanner() {
             }
 
 
+            // Create attendance record
+
             const attendanceRecord = {
 
                 name:
@@ -892,7 +844,7 @@ function startScanner() {
             };
 
 
-            // Save to Supabase
+            // Save attendance to Supabase
 
             const saved =
                 await saveAttendanceToSupabase(
@@ -921,6 +873,8 @@ function startScanner() {
             );
 
 
+            // Attendance successful
+
             window.location.href =
                 "attendance-success.html";
 
@@ -928,14 +882,12 @@ function startScanner() {
 
         (errorMessage) => {
 
-            // Scanner continues searching
+            // Scanner keeps searching
 
         }
 
     );
 }
-
-
 // -----------------------------
 // START CAMERA SCANNER
 // -----------------------------
@@ -1130,4 +1082,3 @@ function scanQRImage() {
 
                     status:
                         "Present",
-```
