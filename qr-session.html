@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AttendX - Attendance QR</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>AttendX</h1>
+        <p>Live Attendance Session</p>
+    </header>
+
+    <main>
+        <section class="hero">
+
+            <h2>Scan to Mark Attendance</h2>
+
+            <p>Scan this QR code using your phone's camera.</p>
+
+            <div id="qrcode"></div>
+
+            <p id="timer">QR changes in 30 seconds</p>
+
+            <button onclick="endSession()">
+                End Attendance Session
+            </button>
+
+            <br><br>
+
+            <button onclick="viewAttendance()">
+                View Attendance
+            </button>
+
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        generateQR();
+    </script>
+
+</body>
+
+</html>

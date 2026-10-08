@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>AttendX - Teacher Dashboard</title>
+
+    <link rel="stylesheet"
+        href="style.css">
+
+</head>
+
+<body>
+
+    <header>
+
+        <h1>AttendX</h1>
+
+        <p>Teacher Dashboard</p>
+
+    </header>
+
+
+    <main>
+
+        <section class="hero">
+
+            <h2>Welcome, Teacher</h2>
+
+            <p>
+                Create and manage your attendance session.
+            </p>
+
+            <br>
+
+
+            <!-- CURRENT SESSION INFORMATION -->
+
+            <div id="dashboardSession">
+
+                <h3>Current Session</h3>
+
+                <p>
+                    <strong>Session ID:</strong>
+                    <span id="dashboardSessionId">
+                        No session
+                    </span>
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    <span id="dashboardSessionStatus">
+                        Inactive
+                    </span>
+                </p>
+
+                <p>
+                    <strong>Students Present:</strong>
+                    <span id="dashboardTotalPresent">
+                        0
+                    </span>
+                </p>
+
+            </div>
+
+
+            <br>
+
+
+            <!-- TEACHER ACTIONS -->
+
+            <button onclick="createSession()">
+                Create Attendance Session
+            </button>
+
+            <button onclick="viewAttendance()">
+                View Attendance
+            </button>
+
+            <button onclick="endSession()">
+                End Attendance Session
+            </button>
+
+        </section>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

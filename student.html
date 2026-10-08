@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AttendX - Student</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+
+<body>
+
+    <header>
+        <h1>AttendX</h1>
+        <p>Student Portal</p>
+    </header>
+
+    <main>
+        <section class="hero">
+
+            <h2>Mark Attendance</h2>
+
+            <input
+                type="text"
+                id="studentName"
+                placeholder="Enter your name"
+            >
+
+            <br><br>
+
+            <input
+                type="text"
+                id="studentRoll"
+                placeholder="Enter roll number"
+            >
+
+            <br><br>
+
+            <input
+                type="password"
+                id="studentPassword"
+                placeholder="Enter password"
+            >
+
+            <br><br>
+
+            <button onclick="startStudentScanner()">
+                Scan QR Code
+            </button>
+
+            <br><br>
+
+            <div id="scannerSection" style="display:none;">
+
+                <h3>Scan Attendance QR</h3>
+
+                <div
+                    id="reader"
+                    style="width:300px; max-width:100%; margin:auto;">
+                </div>
+
+                <p id="scanMessage"></p>
+
+            </div>
+
+        </section>
+    </main>
+
+
+    <script>
+
+        // -----------------------------
+        // LOAD LOCKED STUDENT
+        // -----------------------------
+
+        const lockedStudent =
+            JSON.parse(
+                localStorage.getItem("lockedStudent")
+            );
+
+        if (lockedStudent) {
+
+            document.getElementById("studentName").value =
+                lockedStudent.name;
+
+            document.getElementById("studentRoll").value =
+                lockedStudent.rollNumber;
+
+            document.getElementById("studentPassword").value =
+                lockedStudent.password;
+
+            document.getElementById("studentName").readOnly = true;
+            document.getElementById("studentRoll").readOnly = true;
+            document.getElementById("studentPassword").readOnly = true;
+        }
+
+
+        // -----------------------------
+        // START STUDENT QR SCANNER
+        // -----------------------------
+
+        function startStudentScanner() {
+
+            const name =
+                document.getElementById("studentName").value.trim();
+
+            const roll =
+                document.getElementById("studentRoll").value.trim();
+
+            const password =
+                document.getElementById("studentPassword").value.trim();
+
+
+            if (
+                name === "" ||
+                roll === "" ||
+                password === ""
+            ) {
+
+                alert(
+                    "Please enter your name, roll number and password."
+                );
+
+                return;
+            }
+
+
+            // Save student information
+
+            localStorage.setItem(
+                "studentName",
+                name
+            );
+
+            localStorage.setItem(
+                "studentRoll",
+                roll
+            );
+
+
+            // Show scanner
+
+            document.getElementById(
+                "scannerSection"
+            ).style.display = "block";
+
+
+            const scanner =
+                new Html5Qrcode("reader");
+
+
+            scanner.start(
+
+                {
+                    facingMode: "environment"
+                },
+
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+
+                function(decodedText) {
+
+                    scanner.stop();
+
+                    handleScannedQR(decodedText);
+
+                },
+
+                function(errorMessage) {
+
+                    // Scanner keeps looking for QR
+
+                }
+
+            )
+
+            .catch(function(error) {
+
+                document.getElementById(
+                    "scanMessage"
+                ).innerText =
+                    "Camera could not be opened. Please allow camera permission.";
+
+            });
+
+        }
+
+
+        // -----------------------------
+        // HANDLE SCANNED QR
+        // -----------------------------
+
+        function handleScannedQR(decodedText) {
+
+            try {
+
+                const qrURL =
+                    new URL(decodedText);
+
+
+                const sessionId =
+                    qrURL.searchParams.get("session");
+
+
+                if (!sessionId) {
+
+                    alert(
+                        "Invalid attendance QR code."
+                    );
+
+                    return;
+                }
+
+
+                // Save scanned session
+
+                localStorage.setItem(
+                    "scannedSessionId",
+                    sessionId
+                );
+
+
+                document.getElementById(
+                    "scanMessage"
+                ).innerText =
+                    "QR scanned successfully!";
+
+
+                // Go to attendance processing page
+
+                window.location.href =
+                    "attendance-success.html";
+
+            }
+
+            catch (error) {
+
+                alert(
+                    "Invalid QR code. Please scan the AttendX QR code."
+                );
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

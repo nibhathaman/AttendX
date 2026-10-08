@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendX - Scan QR</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>AttendX</h1>
+        <p>Mark Attendance</p>
+    </header>
+
+    <main>
+        <section class="hero">
+
+            <h2>Scan Attendance QR</h2>
+
+            <p>Scan the QR code displayed by your teacher.</p>
+
+            <div id="reader"></div>
+            <br>
+
+<p>Or test using a QR image:</p>
+
+<input type="file" id="qrImage" accept="image/*">
+
+<br><br>
+
+<button onclick="scanQRImage()">Scan QR Image</button>
+
+            
+        </section>
+    </main>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>

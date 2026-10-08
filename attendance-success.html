@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AttendX - Attendance Marked</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>AttendX</h1>
+        <p>Attendance Confirmation</p>
+    </header>
+
+    <main>
+
+        <section class="hero">
+
+            <h2>✓ Attendance Marked Successfully</h2>
+
+            <p>Your attendance has been recorded.</p>
+
+            <br>
+
+            <div id="studentDetails"></div>
+
+            <div id="sessionDetails"></div>
+
+            <br>
+
+            <button onclick="goHome()">
+                Back to Home
+            </button>
+
+        </section>
+
+    </main>
+
+
+    <script>
+
+        // Get student information
+        const name =
+            localStorage.getItem("studentName");
+
+        const rollNumber =
+            localStorage.getItem("studentRoll");
+
+
+        // Get latest attendance records
+        const attendanceRecords =
+            JSON.parse(
+                localStorage.getItem("attendanceRecords")
+            ) || [];
+
+
+        // Get the latest attendance record
+        const latestRecord =
+            attendanceRecords[
+                attendanceRecords.length - 1
+            ];
+
+
+        // Display student information
+        document.getElementById(
+            "studentDetails"
+        ).innerHTML =
+
+            "<p><strong>Name:</strong> " +
+            (name || "Not available") +
+            "</p>" +
+
+            "<p><strong>Roll Number:</strong> " +
+            (rollNumber || "Not available") +
+            "</p>";
+
+
+        // Display session information
+        if (latestRecord) {
+
+            document.getElementById(
+                "sessionDetails"
+            ).innerHTML =
+
+                "<p><strong>Session ID:</strong> " +
+                latestRecord.sessionId +
+                "</p>" +
+
+                "<p><strong>Status:</strong> " +
+                latestRecord.status +
+                "</p>" +
+
+                "<p><strong>Time:</strong> " +
+                latestRecord.time +
+                "</p>";
+
+        }
+
+    </script>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
