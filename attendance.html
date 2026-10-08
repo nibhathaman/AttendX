@@ -6,12 +6,12 @@
     <meta charset="UTF-8">
 
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+          content="width=device-width, initial-scale=1.0">
 
     <title>AttendX - Attendance Records</title>
 
     <link rel="stylesheet"
-        href="style.css">
+          href="style.css">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -40,23 +40,17 @@
 
                 <p>
                     <strong>Session ID:</strong>
-                    <span id="sessionId">
-                        Loading...
-                    </span>
+                    <span id="sessionId">Loading...</span>
                 </p>
 
                 <p>
                     <strong>Status:</strong>
-                    <span id="sessionStatus">
-                        Loading...
-                    </span>
+                    <span id="sessionStatus">Loading...</span>
                 </p>
 
                 <p>
                     <strong>Total Students Present:</strong>
-                    <span id="totalPresent">
-                        0
-                    </span>
+                    <span id="totalPresent">0</span>
                 </p>
 
             </div>
@@ -66,6 +60,7 @@
 
 
             <h3>Attendance Records</h3>
+
 
             <button onclick="downloadAttendanceReport()">
                 Download Attendance Report
@@ -83,9 +78,6 @@
         </section>
 
     </main>
-
-
-    <script src="script.js"></script>
 
 
     <script>
@@ -125,7 +117,6 @@
                     "<p>No attendance session found.</p>";
 
                 return;
-
             }
 
 
@@ -156,7 +147,6 @@
                 );
 
                 return;
-
             }
 
 
@@ -174,7 +164,6 @@
                     "<p>No attendance records yet.</p>";
 
                 return;
-
             }
 
 
@@ -185,6 +174,7 @@
 
                 const recordDiv =
                     document.createElement("div");
+
 
                 recordDiv.innerHTML = `
                     <p>
@@ -198,6 +188,7 @@
                         ${record.attendance_time}
                     </p>
                 `;
+
 
                 attendanceList.appendChild(recordDiv);
 
