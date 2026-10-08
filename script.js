@@ -1227,3 +1227,28 @@ if (document.getElementById("dashboardSessionId")) {
             "0";
     }
 }
+// -----------------------------
+// QR COUNTDOWN
+// -----------------------------
+
+if (document.getElementById("timer")) {
+
+    let timeLeft = 30;
+
+    document.getElementById("timer").textContent =
+        "QR changes in " + timeLeft + " seconds";
+
+    setInterval(function() {
+
+        timeLeft--;
+
+        if (timeLeft < 0) {
+            timeLeft = 30;
+        }
+
+        document.getElementById("timer").textContent =
+            "QR changes in " + timeLeft + " seconds";
+
+    }, 1000);
+
+}
