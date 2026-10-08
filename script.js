@@ -444,19 +444,21 @@ function getSessionIdFromQR(decodedText) {
 
 function getQRTimestamp(decodedText) {
 
-    const match =
-        decodedText.match(
-            /session=SESSION-\d+-(\d+)/
-        );
+    const url =
+        new URL(decodedText);
 
-    if (!match) {
+    const sessionParameter =
+        url.searchParams.get("session");
+
+    if (!sessionParameter) {
         return null;
     }
 
-    return Number(match[1]);
+    const parts =
+        sessionParameter.split("-");
+
+    return Number(parts[2]);
 }
-
-
 // -----------------------------
 // CHECK QR EXPIRY
 // -----------------------------
