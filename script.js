@@ -1,3 +1,7 @@
+const SUPABASE_URL = "https://drmhmtjhubswubvlkqvq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP";
+
+
 function teacherLogin() {
     window.location.href = "teacher.html";
 }
@@ -151,9 +155,9 @@ function generateQR() {
         return;
     }
 
-    // Laptop IP address
+    // Deployed Student Portal URL
     const studentURL =
-        "http://192.168.29.159:5500/student.html?session=" +
+        "https://nibhathaman.github.io/AttendX/student.html?session=" +
         session.sessionId;
 
     new QRCode(qrContainer, {
@@ -165,33 +169,6 @@ function generateQR() {
         height: 200
 
     });
-}
-
-// -----------------------------
-// QR COUNTDOWN
-// -----------------------------
-
-if (document.getElementById("timer")) {
-
-    let timeLeft = 30;
-
-    setInterval(function() {
-
-        timeLeft--;
-
-        document.getElementById("timer").textContent =
-            "QR changes in " +
-            timeLeft +
-            " seconds";
-
-        if (timeLeft === 0) {
-
-            timeLeft = 30;
-
-        }
-
-    }, 1000);
-
 }
 
 
