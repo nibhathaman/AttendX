@@ -135,12 +135,23 @@ function endSession() {
 // QR CODE GENERATION
 // -----------------------------
 
+// -----------------------------
+// QR CODE GENERATION
+// -----------------------------
+
+let qrTimerInterval;
+
 function generateQR() {
 
     const qrContainer =
         document.getElementById("qrcode");
 
-    qrContainer.innerHTML = "";
+    const timer =
+        document.getElementById("timer");
+
+    if (!qrContainer) {
+        return;
+    }
 
     const session =
         JSON.parse(
@@ -152,23 +163,79 @@ function generateQR() {
         qrContainer.innerHTML =
             "<p>No attendance session found.</p>";
 
+        if (timer) {
+            timer.innerText =
+                "No active session";
+        }
+
         return;
     }
 
-    // Deployed Student Portal URL
-    const studentURL =
-        "https://nibhathaman.github.io/AttendX/student.html?session=" +
-        session.sessionId;
+    // Clear previous timer
+    if (qrTimerInterval) {
+        clearInterval(qrTimerInterval);
+    }
 
-    new QRCode(qrContainer, {
+    function createNewQR() {
 
-        text: studentURL,
+        qrContainer.innerHTML = "";
 
-        width: 200,
+        const qrTimestamp = Date.now();
 
-        height: 200
+        // Session ID + timestamp
+        const qrData =
+            session.sessionId +
+            "-" +
+            qrTimestamp;
 
-    });
+        new QRCode(qrContainer, {
+
+            text:
+                "https://nibhathaman.github.io/AttendX/student.html?session=" +
+                qrData,
+
+            width: 200,
+
+            height: 200
+
+        });
+
+        let secondsLeft = 30;
+
+        if (timer) {
+            timer.innerText =
+                "QR changes in " +
+                secondsLeft +
+                " seconds";
+        }
+
+        qrTimerInterval =
+            setInterval(function () {
+
+                secondsLeft--;
+
+                if (timer) {
+
+                    timer.innerText =
+                        "QR changes in " +
+                        secondsLeft +
+                        " seconds";
+
+                }
+
+                if (secondsLeft <= 0) {
+
+                    clearInterval(qrTimerInterval);
+
+                    createNewQR();
+
+                }
+
+            }, 1000);
+    }
+
+    // Generate first QR
+    createNewQR();
 }
 
 
@@ -419,7 +486,7 @@ function isQRExpired(decodedText) {
     const difference =
         currentTime - qrTimestamp;
 
-    return difference > 30000;
+    return difference >= 30000;
 }
 
 
@@ -1072,36 +1139,54 @@ if (
 // DOWNLOAD ATTENDANCE REPORT
 // -----------------------------
 
-function downloadAttendanceReport() {
+// -----------------------------
+// DOWNLOAD ATTENDANCE REPORT
+// -----------------------------
+
+async function downloadAttendanceReport() {
 
     const currentSession =
         JSON.parse(
             localStorage.getItem("attendanceSession")
         );
 
-    const attendanceRecords =
-        JSON.parse(
-            localStorage.getItem("attendanceRecords")
-        ) || [];
-
 
     if (!currentSession) {
 
-        alert("No attendance session found.");
+        alert(
+            "No attendance session found."
+        );
 
         return;
     }
 
 
-    const sessionRecords =
-        attendanceRecords.filter(
-            record =>
-                record.sessionId ===
+    // Get attendance directly from Supabase
+
+    const { data, error } =
+        await attendanceSupabase
+            .from("attendance")
+            .select("*")
+            .eq(
+                "session_id",
                 currentSession.sessionId
+            );
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Could not download report: " +
+            error.message
         );
 
+        return;
+    }
 
-    if (sessionRecords.length === 0) {
+
+    if (!data || data.length === 0) {
 
         alert(
             "No attendance records available for this session."
@@ -1111,36 +1196,58 @@ function downloadAttendanceReport() {
     }
 
 
-    // Create CSV content
+    // CSV header
 
     let csv =
         "Name,Roll Number,Status,Session ID,Time\n";
 
 
-    sessionRecords.forEach(record => {
+    // Add attendance records
+
+    data.forEach(function(record) {
+
+        const name =
+            String(record.name || "")
+                .replace(/"/g, '""');
+
+        const rollNumber =
+            String(record.roll_number || "")
+                .replace(/"/g, '""');
+
+        const status =
+            String(record.status || "")
+                .replace(/"/g, '""');
+
+        const sessionId =
+            String(record.session_id || "")
+                .replace(/"/g, '""');
+
+        const time =
+            String(record.attendance_time || "")
+                .replace(/"/g, '""');
+
 
         csv +=
-            record.name + "," +
-            record.rollNumber + "," +
-            record.status + "," +
-            record.sessionId + "," +
-            record.time + "\n";
+            '"' + name + '",' +
+            '"' + rollNumber + '",' +
+            '"' + status + '",' +
+            '"' + sessionId + '",' +
+            '"' + time + '"\n';
 
     });
 
 
-    // Create file
+    // Create CSV file
 
     const blob =
         new Blob(
-            [csv],
+            ["\ufeff" + csv],
             {
-                type: "text/csv;charset=utf-8;"
+                type:
+                    "text/csv;charset=utf-8;"
             }
         );
 
-
-    // Create download link
 
     const url =
         URL.createObjectURL(blob);
@@ -1162,8 +1269,6 @@ function downloadAttendanceReport() {
 
     document.body.removeChild(link);
 
-
-    // Clean up
 
     URL.revokeObjectURL(url);
 
@@ -1226,29 +1331,4 @@ if (document.getElementById("dashboardSessionId")) {
         ).textContent =
             "0";
     }
-}
-// -----------------------------
-// QR COUNTDOWN
-// -----------------------------
-
-if (document.getElementById("timer")) {
-
-    let timeLeft = 30;
-
-    document.getElementById("timer").textContent =
-        "QR changes in " + timeLeft + " seconds";
-
-    setInterval(function() {
-
-        timeLeft--;
-
-        if (timeLeft < 0) {
-            timeLeft = 30;
-        }
-
-        document.getElementById("timer").textContent =
-            "QR changes in " + timeLeft + " seconds";
-
-    }, 1000);
-
 }
