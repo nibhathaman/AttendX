@@ -567,25 +567,28 @@ async function checkAttendanceAlreadyMarked(
 // GET SESSION ID FROM QR
 // -----------------------------
 
-function getSessionIdFromQR(
-    decodedText
-) {
+function getSessionIdFromQR(decodedText) {
 
     try {
 
-        const url =
-            new URL(
-                decodedText
-            );
-
+        const url = new URL(decodedText);
 
         const sessionId =
-            url.searchParams.get(
-                "session"
-            );
+            url.searchParams.get("session");
 
+        if (!sessionId) {
+            return null;
+        }
 
-        return sessionId;
+        // Keep only the original session ID
+        const match =
+            sessionId.match(/^SESSION-\d+/);
+
+        if (!match) {
+            return null;
+        }
+
+        return match[0];
 
     }
 
@@ -599,7 +602,6 @@ function getSessionIdFromQR(
         return null;
     }
 }
-
 
 // -----------------------------
 // GET QR TIMESTAMP
