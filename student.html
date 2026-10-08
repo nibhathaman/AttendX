@@ -2,8 +2,11 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>AttendX - Student Portal</title>
 
@@ -14,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -71,19 +75,27 @@
             margin-top: 15px;
             font-weight: bold;
         }
+
     </style>
+
 </head>
+
 
 <body>
 
     <header>
+
         <h1>AttendX</h1>
+
         <p>Student Portal</p>
+
     </header>
+
 
     <div class="container">
 
         <h2>Student Attendance</h2>
+
 
         <input
             type="text"
@@ -91,11 +103,13 @@
             placeholder="Enter Name"
         >
 
+
         <input
             type="text"
             id="studentRoll"
             placeholder="Enter Roll Number"
         >
+
 
         <input
             type="password"
@@ -103,11 +117,14 @@
             placeholder="Enter Password"
         >
 
+
         <br>
+
 
         <button onclick="startStudentScanner()">
             Start Scanner
         </button>
+
 
         <div id="scannerSection" style="display:none;">
 
@@ -128,10 +145,14 @@
         // SUPABASE CONNECTION
         // --------------------------------
 
-        const supabaseClient = window.supabase.createClient(
-            "https://drmhmtjhubswubvlkqvq.supabase.co",
-            "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP"
-        );
+        const supabaseClient =
+            window.supabase.createClient(
+
+                "https://drmhmtjhubswubvlkqvq.supabase.co",
+
+                "YOUR_PUBLISHABLE_KEY"
+
+            );
 
 
         // --------------------------------
@@ -141,20 +162,92 @@
         function startStudentScanner() {
 
             const name =
-                document.getElementById("studentName").value.trim();
+                document
+                    .getElementById("studentName")
+                    .value
+                    .trim();
+
 
             const roll =
-                document.getElementById("studentRoll").value.trim();
+                document
+                    .getElementById("studentRoll")
+                    .value
+                    .trim();
+
 
             if (name === "" || roll === "") {
 
-                alert("Please enter your name and roll number.");
+                alert(
+                    "Please enter your name and roll number."
+                );
+
                 return;
 
             }
 
-            localStorage.setItem("studentName", name);
-            localStorage.setItem("studentRoll", roll);
+
+            // --------------------------------
+            // DEVICE CREDENTIAL LOCK
+            // --------------------------------
+
+            const savedName =
+                localStorage.getItem(
+                    "lockedStudentName"
+                );
+
+
+            const savedRoll =
+                localStorage.getItem(
+                    "lockedStudentRoll"
+                );
+
+
+            // First time on this device/browser
+            if (!savedName && !savedRoll) {
+
+                localStorage.setItem(
+                    "lockedStudentName",
+                    name
+                );
+
+                localStorage.setItem(
+                    "lockedStudentRoll",
+                    roll
+                );
+
+            }
+
+            // Device is already locked
+            else {
+
+                if (
+                    savedName !== name ||
+                    savedRoll !== roll
+                ) {
+
+                    alert(
+                        "This device is already registered to another student. You cannot use different credentials on this device."
+                    );
+
+                    return;
+
+                }
+
+            }
+
+
+            // Save current student information
+
+            localStorage.setItem(
+                "studentName",
+                name
+            );
+
+            localStorage.setItem(
+                "studentRoll",
+                roll
+            );
+
 
             document.getElementById(
                 "scannerSection"
@@ -176,7 +269,9 @@
 
                 async function(decodedText) {
 
-                    await handleScannedQR(decodedText);
+                    await handleScannedQR(
+                        decodedText
+                    );
 
                     html5QrCode.stop();
 
@@ -184,8 +279,8 @@
 
                 function(errorMessage) {
 
-                    // Scanner continuously checks for QR.
-                    // No action needed for every failed frame.
+                    // Scanner continuously checks QR.
+                    // No action needed here.
 
                 }
 
@@ -239,6 +334,7 @@
 
             }
 
+
             return true;
 
         }
@@ -248,15 +344,22 @@
         // HANDLE SCANNED QR
         // --------------------------------
 
-        async function handleScannedQR(decodedText) {
+        async function handleScannedQR(
+            decodedText
+        ) {
 
             try {
 
                 const name =
-                    localStorage.getItem("studentName");
+                    localStorage.getItem(
+                        "studentName"
+                    );
+
 
                 const roll =
-                    localStorage.getItem("studentRoll");
+                    localStorage.getItem(
+                        "studentRoll"
+                    );
 
 
                 const qrURL =
@@ -264,7 +367,9 @@
 
 
                 const sessionId =
-                    qrURL.searchParams.get("session");
+                    qrURL.searchParams.get(
+                        "session"
+                    );
 
 
                 if (!sessionId) {
@@ -298,8 +403,6 @@
 
                 }
 
-
-                // Attendance saved successfully
 
                 window.location.href =
                     "attendance-success.html";
