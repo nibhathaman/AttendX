@@ -215,8 +215,7 @@
                 ]);
 
             if (error) {
-                console.error(error);
-                alert("SUPABASE ERROR: " + JSON.stringify(error));
+                alert("SUPABASE ERROR: " + error.message);
                 return false;
             }
 
