@@ -13,6 +13,7 @@
     <link rel="stylesheet"
         href="style.css">
 
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
@@ -32,10 +33,14 @@
 
         <section class="hero">
 
-            <h2>Attendance Dashboard</h2>
+            <h2>Attendance Records</h2>
+
+            <br>
 
 
-            <div id="sessionInfo">
+            <!-- SESSION INFORMATION -->
+
+            <div id="attendanceSession">
 
                 <p>
                     <strong>Session ID:</strong>
@@ -44,7 +49,6 @@
                     </span>
                 </p>
 
-
                 <p>
                     <strong>Status:</strong>
                     <span id="sessionStatus">
@@ -52,9 +56,8 @@
                     </span>
                 </p>
 
-
                 <p>
-                    <strong>Total Students Present:</strong>
+                    <strong>Students Present:</strong>
                     <span id="totalPresent">
                         0
                     </span>
@@ -66,13 +69,7 @@
             <br>
 
 
-            <h3>Attendance Records</h3>
-
-
-            <button onclick="downloadAttendanceReport()">
-                Download Attendance Report
-            </button>
-
+            <!-- ATTENDANCE LIST -->
 
             <div id="attendanceList">
 
@@ -82,16 +79,31 @@
 
             </div>
 
+
+            <br>
+
+
+            <!-- DOWNLOAD REPORT -->
+
+            <button onclick="downloadAttendanceReport()">
+                Download Attendance Report
+            </button>
+
+
+            <br>
+            <br>
+
+
+            <button onclick="goHome()">
+                Back to Home
+            </button>
+
         </section>
 
     </main>
 
 
     <script>
-
-        // --------------------------------
-        // SUPABASE CONNECTION
-        // --------------------------------
 
         const attendanceSupabase =
             window.supabase.createClient(
@@ -101,47 +113,59 @@
 
 
         // --------------------------------
-        // GET SESSION FROM URL
-        // --------------------------------
-
-        const urlParams =
-            new URLSearchParams(
-                window.location.search
-            );
-
-
-        const currentSessionId =
-            urlParams.get("session");
-
-
-        // --------------------------------
         // LOAD ATTENDANCE
         // --------------------------------
 
         async function loadAttendanceFromSupabase() {
 
-            if (!currentSessionId) {
+            const urlParams =
+                new URLSearchParams(
+                    window.location.search
+                );
 
-                document.getElementById("sessionId").innerText =
+
+            // IMPORTANT:
+            // Get session ID from View Attendance URL
+
+            const sessionId =
+                urlParams.get("session");
+
+
+            if (!sessionId) {
+
+                document.getElementById(
+                    "sessionId"
+                ).innerText =
                     "No session found";
 
-                document.getElementById("sessionStatus").innerText =
-                    "Inactive";
 
-                document.getElementById("attendanceList").innerHTML =
+                document.getElementById(
+                    "sessionStatus"
+                ).innerText =
+                    "No session found";
+
+
+                document.getElementById(
+                    "attendanceList"
+                ).innerHTML =
                     "<p>No attendance session found.</p>";
+
 
                 return;
             }
 
 
-            // Show the EXACT session ID received from dashboard
+            // Display EXACT session ID
 
-            document.getElementById("sessionId").innerText =
-                currentSessionId;
+            document.getElementById(
+                "sessionId"
+            ).innerText =
+                sessionId;
 
 
-            // Get status from existing local session
+            // --------------------------------
+            // SESSION STATUS
+            // --------------------------------
 
             const storedSession =
                 JSON.parse(
@@ -153,7 +177,7 @@
 
             if (
                 storedSession &&
-                storedSession.sessionId === currentSessionId
+                storedSession.sessionId === sessionId
             ) {
 
                 document.getElementById(
@@ -174,7 +198,7 @@
 
 
             // --------------------------------
-            // FETCH RECORDS FROM SUPABASE
+            // GET RECORDS FROM SUPABASE
             // --------------------------------
 
             const { data, error } =
@@ -183,27 +207,37 @@
                     .select("*")
                     .eq(
                         "session_id",
-                        currentSessionId
+                        sessionId
                     );
 
 
             if (error) {
 
-                console.error(error);
+                console.error(
+                    "Supabase Error:",
+                    error
+                );
+
 
                 document.getElementById(
                     "attendanceList"
                 ).innerHTML =
                     "<p>Error loading attendance records.</p>";
 
+
                 alert(
                     "SUPABASE ERROR: " +
                     error.message
                 );
 
+
                 return;
             }
 
+
+            // --------------------------------
+            // TOTAL PRESENT
+            // --------------------------------
 
             document.getElementById(
                 "totalPresent"
@@ -217,6 +251,10 @@
                 );
 
 
+            // --------------------------------
+            // NO RECORDS
+            // --------------------------------
+
             if (data.length === 0) {
 
                 attendanceList.innerHTML =
@@ -225,6 +263,10 @@
                 return;
             }
 
+
+            // --------------------------------
+            // DISPLAY RECORDS
+            // --------------------------------
 
             attendanceList.innerHTML = "";
 
@@ -239,16 +281,29 @@
 
 
                     recordDiv.innerHTML = `
+
                         <p>
-                            <strong>${index + 1}.</strong>
+
+                            <strong>
+                                ${index + 1}.
+                            </strong>
+
                             ${record.name}
+
                             |
+
                             ${record.roll_number}
+
                             |
+
                             ${record.status}
+
                             |
+
                             ${record.attendance_time}
+
                         </p>
+
                     `;
 
 
@@ -263,12 +318,22 @@
 
 
         // --------------------------------
-        // DOWNLOAD ATTENDANCE REPORT
+        // DOWNLOAD REPORT
         // --------------------------------
 
         async function downloadAttendanceReport() {
 
-            if (!currentSessionId) {
+            const urlParams =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+
+            const sessionId =
+                urlParams.get("session");
+
+
+            if (!sessionId) {
 
                 alert(
                     "No attendance session found."
@@ -286,25 +351,36 @@
                         .select("*")
                         .eq(
                             "session_id",
-                            currentSessionId
+                            sessionId
                         );
 
 
                 if (error) {
 
+                    console.error(
+                        "Supabase Error:",
+                        error
+                    );
+
+
                     alert(
                         "Could not load attendance records."
                     );
+
 
                     return;
                 }
 
 
-                if (!data || data.length === 0) {
+                if (
+                    !data ||
+                    data.length === 0
+                ) {
 
                     alert(
                         "No attendance records available for this session."
                     );
+
 
                     return;
                 }
@@ -338,7 +414,7 @@
                     );
 
 
-                const urlObject =
+                const url =
                     URL.createObjectURL(
                         blob
                     );
@@ -351,7 +427,7 @@
 
 
                 link.href =
-                    urlObject;
+                    url;
 
 
                 link.download =
@@ -372,14 +448,17 @@
 
 
                 URL.revokeObjectURL(
-                    urlObject
+                    url
                 );
 
             }
 
             catch (error) {
 
-                console.error(error);
+                console.error(
+                    error
+                );
+
 
                 alert(
                     "Could not download attendance report."
@@ -391,7 +470,19 @@
 
 
         // --------------------------------
-        // LOAD PAGE
+        // GO HOME
+        // --------------------------------
+
+        function goHome() {
+
+            window.location.href =
+                "index.html";
+
+        }
+
+
+        // --------------------------------
+        // START
         // --------------------------------
 
         loadAttendanceFromSupabase();
