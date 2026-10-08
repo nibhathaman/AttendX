@@ -422,18 +422,21 @@ async function loginStudent() {
 
 function getSessionIdFromQR(decodedText) {
 
-    const match =
-        decodedText.match(
-            /session=(SESSION-\d+)-\d+/
-        );
+    const url =
+        new URL(decodedText);
 
-    if (!match) {
+    const sessionParameter =
+        url.searchParams.get("session");
+
+    if (!sessionParameter) {
         return null;
     }
 
-    return match[1];
+    return sessionParameter
+        .split("-")
+        .slice(0, 2)
+        .join("-");
 }
-
 
 // -----------------------------
 // GET QR TIMESTAMP
