@@ -1,13 +1,6 @@
-const SUPABASE_URL =
-    "https://drmhmtjhubswubvlkqvq.supabase.co";
+const SUPABASE_URL = "https://drmhmtjhubswubvlkqvq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP";
 
-const SUPABASE_KEY =
-    "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP";
-
-
-// -----------------------------
-// BASIC NAVIGATION
-// -----------------------------
 
 function teacherLogin() {
     window.location.href = "teacher.html";
@@ -17,10 +10,6 @@ function studentLogin() {
     window.location.href = "student.html";
 }
 
-
-// -----------------------------
-// TEACHER LOGIN
-// -----------------------------
 
 function loginTeacher() {
 
@@ -32,70 +21,41 @@ function loginTeacher() {
 
     if (teacherName === "" || teacherPassword === "") {
 
-        alert(
-            "Please enter your username and password."
-        );
+        alert("Please enter your username and password.");
 
         return;
     }
 
-    window.location.href =
-        "teacher-dashboard.html";
+    window.location.href = "teacher-dashboard.html";
 }
 
-
-// -----------------------------
-// CREATE ATTENDANCE SESSION
-// -----------------------------
 
 function createSession() {
 
     const session = {
-
-        sessionId:
-            "SESSION-" + Date.now(),
-
-        createdAt:
-            Date.now(),
-
-        status:
-            "Active"
-
+        sessionId: "SESSION-" + Date.now(),
+        createdAt: Date.now(),
+        status: "Active"
     };
 
+    // Create a fresh session
     localStorage.setItem(
         "attendanceSession",
         JSON.stringify(session)
     );
 
-    localStorage.removeItem(
-        "attendanceRecords"
-    );
+    // Clear attendance records from previous session
+    localStorage.removeItem("attendanceRecords");
 
-    window.location.href =
-        "qr-session.html";
+    window.location.href = "qr-session.html";
 }
-
-
-// -----------------------------
-// VIEW ATTENDANCE
-// -----------------------------
 
 function viewAttendance() {
-
-    window.location.href =
-        "attendance.html";
+    window.location.href = "attendance.html";
 }
 
-
-// -----------------------------
-// GO HOME
-// -----------------------------
-
 function goHome() {
-
-    window.location.href =
-        "index.html";
+    window.location.href = "index.html";
 }
 
 
@@ -112,6 +72,9 @@ function endSession() {
             )
         );
 
+
+    // Check if session exists
+
     if (!session) {
 
         alert(
@@ -120,6 +83,9 @@ function endSession() {
 
         return;
     }
+
+
+    // Check if already ended
 
     if (session.status === "Ended") {
 
@@ -130,17 +96,23 @@ function endSession() {
         return;
     }
 
-    session.status =
-        "Ended";
+
+    // End the session
+
+    session.status = "Ended";
 
     localStorage.setItem(
         "attendanceSession",
         JSON.stringify(session)
     );
 
+
     alert(
         "Attendance session ended successfully."
     );
+
+
+    // Refresh dashboard information
 
     if (
         document.getElementById(
@@ -152,134 +124,27 @@ function endSession() {
             "dashboardSessionStatus"
         ).textContent =
             "Ended";
+
     }
+
 }
 
-
-// -----------------------------
-// SAVE ATTENDANCE TO SUPABASE
-// -----------------------------
-
-async function saveAttendanceToSupabase(
-    attendanceRecord
-) {
-
-    try {
-
-        const response =
-            await fetch(
-                SUPABASE_URL +
-                "/rest/v1/attendance",
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY,
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Prefer":
-                            "return=minimal"
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            name:
-                                attendanceRecord.name,
-
-                            roll_number:
-                                attendanceRecord.rollNumber,
-
-                            status:
-                                attendanceRecord.status,
-
-                            session_id:
-                                attendanceRecord.sessionId,
-
-                            attendance_time:
-                                attendanceRecord.time
-
-                        })
-
-                }
-            );
-
-
-        if (!response.ok) {
-
-            const errorText =
-                await response.text();
-
-            console.error(
-                "Supabase attendance error:",
-                errorText
-            );
-
-            alert(
-                "Attendance could not be saved to the database."
-            );
-
-            return false;
-        }
-
-
-        return true;
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Supabase connection error:",
-            error
-        );
-
-        alert(
-            "Database connection failed."
-        );
-
-        return false;
-    }
-}
 
 
 // -----------------------------
 // QR CODE GENERATION
 // -----------------------------
 
-let qrTimerInterval;
-
 function generateQR() {
 
     const qrContainer =
-        document.getElementById(
-            "qrcode"
-        );
+        document.getElementById("qrcode");
 
-    const timer =
-        document.getElementById(
-            "timer"
-        );
-
-    if (!qrContainer) {
-        return;
-    }
+    qrContainer.innerHTML = "";
 
     const session =
         JSON.parse(
-            localStorage.getItem(
-                "attendanceSession"
-            )
+            localStorage.getItem("attendanceSession")
         );
 
     if (!session) {
@@ -287,108 +152,23 @@ function generateQR() {
         qrContainer.innerHTML =
             "<p>No attendance session found.</p>";
 
-        if (timer) {
-
-            timer.innerText =
-                "No active session";
-        }
-
         return;
     }
 
+    // Deployed Student Portal URL
+    const studentURL =
+        "https://nibhathaman.github.io/AttendX/student.html?session=" +
+        session.sessionId;
 
-    if (qrTimerInterval) {
+    new QRCode(qrContainer, {
 
-        clearInterval(
-            qrTimerInterval
-        );
-    }
+        text: studentURL,
 
+        width: 200,
 
-    function createNewQR() {
+        height: 200
 
-        qrContainer.innerHTML =
-            "";
-
-        const qrTimestamp =
-            Date.now();
-
-
-        const qrData =
-            session.sessionId +
-            "-" +
-            qrTimestamp;
-
-
-        const studentURL =
-            "https://nibhathaman.github.io/AttendX/student.html?session=" +
-            qrData;
-
-
-        new QRCode(
-            qrContainer,
-            {
-
-                text:
-                    studentURL,
-
-                width:
-                    200,
-
-                height:
-                    200
-
-            }
-        );
-
-
-        let secondsLeft =
-            30;
-
-
-        if (timer) {
-
-            timer.innerText =
-                "QR changes in " +
-                secondsLeft +
-                " seconds";
-        }
-
-
-        qrTimerInterval =
-            setInterval(
-                function () {
-
-                    secondsLeft--;
-
-
-                    if (timer) {
-
-                        timer.innerText =
-                            "QR changes in " +
-                            secondsLeft +
-                            " seconds";
-                    }
-
-
-                    if (
-                        secondsLeft <= 0
-                    ) {
-
-                        clearInterval(
-                            qrTimerInterval
-                        );
-
-                        createNewQR();
-                    }
-
-                },
-                1000
-            );
-    }
-
-
-    createNewQR();
+    });
 }
 
 
@@ -396,34 +176,19 @@ function generateQR() {
 // STUDENT LOGIN
 // -----------------------------
 
-async function loginStudent() {
+function loginStudent() {
 
     const name =
-        document
-            .getElementById(
-                "studentName"
-            )
-            .value
-            .trim();
-
+        document.getElementById("studentName").value.trim();
 
     const rollNumber =
-        document
-            .getElementById(
-                "studentRoll"
-            )
-            .value
-            .trim();
-
+        document.getElementById("studentRoll").value.trim();
 
     const password =
-        document
-            .getElementById(
-                "studentPassword"
-            )
-            .value
-            .trim();
+        document.getElementById("studentPassword").value.trim();
 
+
+    // Check empty fields
 
     if (
         name === "" ||
@@ -439,19 +204,20 @@ async function loginStudent() {
     }
 
 
+    // Get session ID from QR URL
+
     const urlParams =
         new URLSearchParams(
             window.location.search
         );
 
-
-    const sessionData =
-        urlParams.get(
-            "session"
-        );
+    const sessionId =
+        urlParams.get("session");
 
 
-    if (!sessionData) {
+    // Check if session exists
+
+    if (!sessionId) {
 
         alert(
             "No attendance session found. Please scan the QR code again."
@@ -461,21 +227,21 @@ async function loginStudent() {
     }
 
 
+    // Check if a student account is already locked
+
     const lockedStudent =
         JSON.parse(
-            localStorage.getItem(
-                "lockedStudent"
-            )
+            localStorage.getItem("lockedStudent")
         );
 
+
+    // If account is already locked
 
     if (lockedStudent) {
 
         if (
-            lockedStudent.rollNumber !==
-                rollNumber ||
-            lockedStudent.password !==
-                password
+            lockedStudent.rollNumber !== rollNumber ||
+            lockedStudent.password !== password
         ) {
 
             alert(
@@ -487,41 +253,41 @@ async function loginStudent() {
 
     }
 
+
+    // First-time registration
+
     else {
 
         const studentData = {
 
-            name:
-                name,
+            name: name,
 
-            rollNumber:
-                rollNumber,
+            rollNumber: rollNumber,
 
-            password:
-                password
+            password: password
 
         };
 
 
         localStorage.setItem(
             "lockedStudent",
-            JSON.stringify(
-                studentData
-            )
+            JSON.stringify(studentData)
         );
 
 
         alert(
             "Your student account has been successfully linked to this device."
         );
+
     }
 
+
+    // Save current student details
 
     localStorage.setItem(
         "studentName",
         name
     );
-
 
     localStorage.setItem(
         "studentRoll",
@@ -529,41 +295,7 @@ async function loginStudent() {
     );
 
 
-    const scannedSessionId =
-        getSessionIdFromQR(
-            sessionData
-        );
-
-
-    const qrTimestamp =
-        getQRTimestamp(
-            sessionData
-        );
-
-
-    if (!qrTimestamp) {
-
-        alert(
-            "Invalid QR code."
-        );
-
-        return;
-    }
-
-
-    if (
-        Date.now() -
-            qrTimestamp >=
-        30000
-    ) {
-
-        alert(
-            "This QR has expired. Please scan the latest QR."
-        );
-
-        return;
-    }
-
+    // Get attendance records
 
     let attendanceRecords =
         JSON.parse(
@@ -573,13 +305,13 @@ async function loginStudent() {
         ) || [];
 
 
+    // Check duplicate attendance
+
     const alreadyMarked =
         attendanceRecords.some(
             record =>
-                record.rollNumber ===
-                    rollNumber &&
-                record.sessionId ===
-                    scannedSessionId
+                record.rollNumber === rollNumber &&
+                record.sessionId === sessionId
         );
 
 
@@ -593,19 +325,17 @@ async function loginStudent() {
     }
 
 
+    // Create attendance record
+
     const attendanceRecord = {
 
-        name:
-            name,
+        name: name,
 
-        rollNumber:
-            rollNumber,
+        rollNumber: rollNumber,
 
-        status:
-            "Present",
+        status: "Present",
 
-        sessionId:
-            scannedSessionId,
+        sessionId: sessionId,
 
         qrData:
             window.location.href,
@@ -616,26 +346,11 @@ async function loginStudent() {
     };
 
 
-    // Save to Supabase FIRST
-
-    const saved =
-        await saveAttendanceToSupabase(
-            attendanceRecord
-        );
-
-
-    if (!saved) {
-
-        return;
-    }
-
-
-    // Save local copy
+    // Save attendance
 
     attendanceRecords.push(
         attendanceRecord
     );
-
 
     localStorage.setItem(
         "attendanceRecords",
@@ -645,22 +360,22 @@ async function loginStudent() {
     );
 
 
+    // Attendance successful
+
     window.location.href =
         "attendance-success.html";
-}
 
+}
+  
 
 // -----------------------------
 // GET SESSION ID FROM QR
 // -----------------------------
 
-function getSessionIdFromQR(
-    decodedText
-) {
+function getSessionIdFromQR(decodedText) {
 
     const parts =
         decodedText.split("-");
-
 
     return parts
         .slice(0, 2)
@@ -672,13 +387,10 @@ function getSessionIdFromQR(
 // GET QR TIMESTAMP
 // -----------------------------
 
-function getQRTimestamp(
-    decodedText
-) {
+function getQRTimestamp(decodedText) {
 
     const parts =
         decodedText.split("-");
-
 
     return Number(
         parts[2]
@@ -690,29 +402,24 @@ function getQRTimestamp(
 // CHECK QR EXPIRY
 // -----------------------------
 
-function isQRExpired(
-    decodedText
-) {
+function isQRExpired(decodedText) {
 
     const qrTimestamp =
-        getQRTimestamp(
-            decodedText
-        );
-
+        getQRTimestamp(decodedText);
 
     if (!qrTimestamp) {
 
         return true;
+
     }
 
+    const currentTime =
+        Date.now();
 
     const difference =
-        Date.now() -
-        qrTimestamp;
+        currentTime - qrTimestamp;
 
-
-    return difference >=
-        30000;
+    return difference > 30000;
 }
 
 
@@ -734,9 +441,10 @@ function startScanner() {
             qrbox: 250
         },
 
-        async (decodedText) => {
+        (decodedText) => {
 
-            await scanner.stop();
+            scanner.stop();
+
 
             const lockedStudent =
                 JSON.parse(
@@ -757,17 +465,67 @@ function startScanner() {
 
             const rollNumber =
                 lockedStudent.rollNumber;
+            
+            const currentSession =
+                JSON.parse(
+                    localStorage.getItem(
+                        "attendanceSession"
+                    )
+                );
 
 
-            // Get session directly from scanned QR
+            // Check if session exists
+
+            if (!currentSession) {
+
+                alert(
+                    "No active attendance session found."
+                );
+
+                return;
+            }
+
+
+            // Check if session is still active
+
+            if (currentSession.status !== "Active") {
+
+                alert(
+                    "This attendance session has ended."
+                );
+
+                return;
+            }
+
+
+            // Get session ID from scanned QR
 
             const scannedSessionId =
-                getSessionIdFromQR(decodedText);
+                getSessionIdFromQR(
+                    decodedText
+                );
+
+
+            // Check session ID
+
+            if (
+                scannedSessionId !==
+                currentSession.sessionId
+            ) {
+
+                alert(
+                    "This QR does not belong to the active attendance session."
+                );
+
+                return;
+            }
 
 
             // Check QR expiry
 
-            if (isQRExpired(decodedText)) {
+            if (
+                isQRExpired(decodedText)
+            ) {
 
                 alert(
                     "This QR has expired. Please scan the latest QR."
@@ -777,19 +535,7 @@ function startScanner() {
             }
 
 
-            // Check session ID
-
-            if (!scannedSessionId) {
-
-                alert(
-                    "Invalid attendance QR."
-                );
-
-                return;
-            }
-
-
-            // Check duplicate attendance locally
+            // Get existing attendance records
 
             let attendanceRecords =
                 JSON.parse(
@@ -798,6 +544,8 @@ function startScanner() {
                     )
                 ) || [];
 
+
+            // Check duplicate attendance
 
             const alreadyMarked =
                 attendanceRecords.some(
@@ -823,14 +571,11 @@ function startScanner() {
 
             const attendanceRecord = {
 
-                name:
-                    name,
+                name: name,
 
-                rollNumber:
-                    rollNumber,
+                rollNumber: rollNumber,
 
-                status:
-                    "Present",
+                status: "Present",
 
                 sessionId:
                     scannedSessionId,
@@ -844,26 +589,11 @@ function startScanner() {
             };
 
 
-            // Save attendance to Supabase
-
-            const saved =
-                await saveAttendanceToSupabase(
-                    attendanceRecord
-                );
-
-
-            if (!saved) {
-
-                return;
-            }
-
-
-            // Save local copy
+            // Save attendance
 
             attendanceRecords.push(
                 attendanceRecord
             );
-
 
             localStorage.setItem(
                 "attendanceRecords",
@@ -882,23 +612,23 @@ function startScanner() {
 
         (errorMessage) => {
 
-            // Scanner keeps searching
+            // Scanner continues searching
 
         }
 
     );
+
 }
-// -----------------------------
-// START CAMERA SCANNER
-// -----------------------------
+
+
+// Start camera scanner
 
 if (
-    document.getElementById(
-        "reader"
-    )
+    document.getElementById("reader")
 ) {
 
     startScanner();
+
 }
 
 
@@ -915,8 +645,7 @@ function scanQRImage() {
 
 
     if (
-        fileInput.files.length ===
-        0
+        fileInput.files.length === 0
     ) {
 
         alert(
@@ -928,157 +657,598 @@ function scanQRImage() {
 
 
     const scanner =
-        new Html5Qrcode(
-            "reader"
+        new Html5Qrcode("reader");
+
+
+    scanner.scanFile(
+        fileInput.files[0],
+        true
+    )
+
+    .then(decodedText => {
+
+        const lockedStudent =
+            JSON.parse(
+                localStorage.getItem("lockedStudent")
+            );
+
+        if (!lockedStudent) {
+
+            alert(
+                "No student account is linked to this device."
+            );
+
+            scanner.clear();
+
+            return;
+        }
+
+        const name =
+            lockedStudent.name;
+
+        const rollNumber =
+            lockedStudent.rollNumber;
+
+        const currentSession =
+            JSON.parse(
+                localStorage.getItem(
+                    "attendanceSession"
+                )
+            );
+
+
+        // Check if session exists
+
+        if (!currentSession) {
+
+            alert(
+                "No active attendance session found."
+            );
+
+            scanner.clear();
+
+            return;
+        }
+
+
+        // Check if session is still active
+
+        if (currentSession.status !== "Active") {
+
+            alert(
+                "This attendance session has ended."
+            );
+
+            scanner.clear();
+
+            return;
+        }
+
+
+        // Get session ID from QR
+
+        const scannedSessionId =
+            getSessionIdFromQR(
+                decodedText
+            );
+
+
+        // Check session ID
+
+        if (
+            scannedSessionId !==
+            currentSession.sessionId
+        ) {
+
+            alert(
+                "This QR does not belong to the active attendance session."
+            );
+
+            scanner.clear();
+
+            return;
+        }
+
+
+        // Check QR expiry
+
+        if (
+            isQRExpired(decodedText)
+        ) {
+
+            alert(
+                "This QR has expired. Please scan the latest QR."
+            );
+
+            scanner.clear();
+
+            return;
+        }
+
+
+        // Get attendance records
+
+        let attendanceRecords =
+            JSON.parse(
+                localStorage.getItem(
+                    "attendanceRecords"
+                )
+            ) || [];
+
+
+        // Check duplicate attendance
+
+        const alreadyMarked =
+            attendanceRecords.some(
+                record =>
+                    record.rollNumber ===
+                        rollNumber &&
+                    record.sessionId ===
+                        scannedSessionId
+            );
+
+
+        if (alreadyMarked) {
+
+            alert(
+                "Attendance already marked for this session."
+            );
+
+            scanner.clear();
+
+            return;
+        }
+
+
+        // Create attendance record
+
+        const attendanceRecord = {
+
+            name: name,
+
+            rollNumber: rollNumber,
+
+            status: "Present",
+
+            sessionId:
+                scannedSessionId,
+
+            qrData:
+                decodedText,
+
+            time:
+                new Date().toLocaleString()
+
+        };
+
+
+        // Save attendance
+
+        attendanceRecords.push(
+            attendanceRecord
+        );
+
+        localStorage.setItem(
+            "attendanceRecords",
+            JSON.stringify(
+                attendanceRecords
+            )
         );
 
 
-    scanner
-        .scanFile(
-            fileInput.files[0],
-            true
-        )
-
-        .then(
-            async decodedText => {
-
-                const lockedStudent =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "lockedStudent"
-                        )
-                    );
+        scanner.clear();
 
 
-                if (!lockedStudent) {
+        // Attendance successful
 
-                    alert(
-                        "No student account is linked to this device."
-                    );
+        window.location.href =
+            "attendance-success.html";
 
-                    scanner.clear();
+    })
 
-                    return;
+    .catch(error => {
+
+        alert(
+            "QR could not be detected. Try a clearer screenshot."
+        );
+
+        scanner.clear();
+
+    });
+
+}
+
+
+// -----------------------------
+// -----------------------------
+// ATTENDANCE RECORDS
+// -----------------------------
+
+if (
+    document.getElementById("attendanceList")
+) {
+
+    const attendanceRecords =
+        JSON.parse(
+            localStorage.getItem(
+                "attendanceRecords"
+            )
+        ) || [];
+
+
+    const currentSession =
+        JSON.parse(
+            localStorage.getItem(
+                "attendanceSession"
+            )
+        );
+
+
+    const attendanceList =
+        document.getElementById(
+            "attendanceList"
+        );
+
+
+    // Check if a session exists
+
+    if (!currentSession) {
+
+        attendanceList.innerHTML =
+            "<p>No attendance session found.</p>";
+
+    }
+
+    else {
+
+        // Get current session ID
+
+        const currentSessionId =
+            currentSession.sessionId;
+
+
+        // Get only records for current session
+
+        const sessionRecords =
+            attendanceRecords.filter(
+                record =>
+                    record.sessionId ===
+                    currentSessionId
+            );
+
+
+        // Check if there are no records
+
+        if (
+            sessionRecords.length === 0
+        ) {
+
+            attendanceList.innerHTML =
+                "<p>No attendance records for this session yet.</p>";
+
+        }
+
+        else {
+
+            let table = `
+
+                <table>
+
+                    <tr>
+
+                        <th>Name</th>
+
+                        <th>Roll Number</th>
+
+                        <th>Status</th>
+
+                        <th>Time</th>
+
+                    </tr>
+
+            `;
+
+
+            sessionRecords.forEach(
+                record => {
+
+                    table += `
+
+                        <tr>
+
+                            <td>
+                                ${record.name}
+                            </td>
+
+                            <td>
+                                ${record.rollNumber}
+                            </td>
+
+                            <td>
+                                ${record.status}
+                            </td>
+
+                            <td>
+                                ${record.time}
+                            </td>
+
+                        </tr>
+
+                    `;
+
                 }
+            );
 
 
-                const name =
-                    lockedStudent.name;
+            table += "</table>";
 
 
-                const rollNumber =
-                    lockedStudent.rollNumber;
+            attendanceList.innerHTML =
+                table;
+
+        }
+
+    }
+
+}
+
+// -----------------------------
+// SESSION INFORMATION
+// -----------------------------
+
+if (
+    document.getElementById("sessionId")
+) {
+
+    const currentSession =
+        JSON.parse(
+            localStorage.getItem(
+                "attendanceSession"
+            )
+        );
 
 
-                const currentSession =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "attendanceSession"
-                        )
-                    );
+    const attendanceRecords =
+        JSON.parse(
+            localStorage.getItem(
+                "attendanceRecords"
+            )
+        ) || [];
 
 
-                if (!currentSession) {
+    if (currentSession) {
 
-                    alert(
-                        "No active attendance session found."
-                    );
-
-                    scanner.clear();
-
-                    return;
-                }
+        document.getElementById(
+            "sessionId"
+        ).textContent =
+            currentSession.sessionId;
 
 
-                if (
-                    currentSession.status !==
-                    "Active"
-                ) {
+        document.getElementById(
+            "sessionStatus"
+        ).textContent =
+            currentSession.status;
 
-                    alert(
-                        "This attendance session has ended."
-                    );
+    }
 
-                    scanner.clear();
+    else {
 
-                    return;
-                }
-
-
-                const scannedSessionId =
-                    getSessionIdFromQR(
-                        decodedText
-                    );
+        document.getElementById(
+            "sessionId"
+        ).textContent =
+            "No active session";
 
 
-                if (
-                    scannedSessionId !==
+        document.getElementById(
+            "sessionStatus"
+        ).textContent =
+            "Inactive";
+
+    }
+
+
+    const currentSessionId =
+        currentSession
+            ? currentSession.sessionId
+            : null;
+
+
+    const sessionRecords =
+        attendanceRecords.filter(
+            record =>
+                record.sessionId ===
+                currentSessionId
+        );
+
+
+    document.getElementById(
+        "totalPresent"
+    ).textContent =
+        sessionRecords.length;
+
+}
+
+// -----------------------------
+// DOWNLOAD ATTENDANCE REPORT
+// -----------------------------
+
+function downloadAttendanceReport() {
+
+    const currentSession =
+        JSON.parse(
+            localStorage.getItem("attendanceSession")
+        );
+
+    const attendanceRecords =
+        JSON.parse(
+            localStorage.getItem("attendanceRecords")
+        ) || [];
+
+
+    if (!currentSession) {
+
+        alert("No attendance session found.");
+
+        return;
+    }
+
+
+    const sessionRecords =
+        attendanceRecords.filter(
+            record =>
+                record.sessionId ===
+                currentSession.sessionId
+        );
+
+
+    if (sessionRecords.length === 0) {
+
+        alert(
+            "No attendance records available for this session."
+        );
+
+        return;
+    }
+
+
+    // Create CSV content
+
+    let csv =
+        "Name,Roll Number,Status,Session ID,Time\n";
+
+
+    sessionRecords.forEach(record => {
+
+        csv +=
+            record.name + "," +
+            record.rollNumber + "," +
+            record.status + "," +
+            record.sessionId + "," +
+            record.time + "\n";
+
+    });
+
+
+    // Create file
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type: "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    // Create download link
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href = url;
+
+    link.download =
+        "AttendX_Attendance_Report.csv";
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+
+    // Clean up
+
+    URL.revokeObjectURL(url);
+
+}
+
+// -----------------------------
+// TEACHER DASHBOARD INFORMATION
+// -----------------------------
+
+if (document.getElementById("dashboardSessionId")) {
+
+    const currentSession =
+        JSON.parse(
+            localStorage.getItem("attendanceSession")
+        );
+
+    const attendanceRecords =
+        JSON.parse(
+            localStorage.getItem("attendanceRecords")
+        ) || [];
+
+    if (currentSession) {
+
+        document.getElementById(
+            "dashboardSessionId"
+        ).textContent =
+            currentSession.sessionId;
+
+        document.getElementById(
+            "dashboardSessionStatus"
+        ).textContent =
+            currentSession.status;
+
+        const sessionRecords =
+            attendanceRecords.filter(
+                record =>
+                    record.sessionId ===
                     currentSession.sessionId
-                ) {
+            );
 
-                    alert(
-                        "This QR does not belong to the active attendance session."
-                    );
+        document.getElementById(
+            "dashboardTotalPresent"
+        ).textContent =
+            sessionRecords.length;
 
-                    scanner.clear();
+    } else {
 
-                    return;
-                }
+        document.getElementById(
+            "dashboardSessionId"
+        ).textContent =
+            "No session";
 
+        document.getElementById(
+            "dashboardSessionStatus"
+        ).textContent =
+            "Inactive";
 
-                if (
-                    isQRExpired(
-                        decodedText
-                    )
-                ) {
+        document.getElementById(
+            "dashboardTotalPresent"
+        ).textContent =
+            "0";
+    }
+}
+// -----------------------------
+// QR COUNTDOWN
+// -----------------------------
 
-                    alert(
-                        "This QR has expired. Please scan the latest QR."
-                    );
+if (document.getElementById("timer")) {
 
-                    scanner.clear();
+    let timeLeft = 30;
 
-                    return;
-                }
+    document.getElementById("timer").textContent =
+        "QR changes in " + timeLeft + " seconds";
 
+    setInterval(function() {
 
-                let attendanceRecords =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "attendanceRecords"
-                        )
-                    ) || [];
+        timeLeft--;
 
+        if (timeLeft < 0) {
+            timeLeft = 30;
+        }
 
-                const alreadyMarked =
-                    attendanceRecords.some(
-                        record =>
-                            record.rollNumber ===
-                                rollNumber &&
-                            record.sessionId ===
-                                scannedSessionId
-                    );
+        document.getElementById("timer").textContent =
+            "QR changes in " + timeLeft + " seconds";
 
+    }, 1000);
 
-                if (alreadyMarked) {
-
-                    alert(
-                        "Attendance already marked for this session."
-                    );
-
-                    scanner.clear();
-
-                    return;
-                }
-
-
-                const attendanceRecord = {
-
-                    name:
-                        name,
-
-                    rollNumber:
-                        rollNumber,
-
-                    status:
-                        "Present",
+}
