@@ -348,6 +348,23 @@ async function saveAttendanceToSupabase(
     sessionId
 ) {
 
+    // Check one final time before inserting
+    const alreadyMarked =
+        await checkAttendanceAlreadyMarked(
+            rollNumber,
+            sessionId
+        );
+
+    if (alreadyMarked) {
+
+        console.log(
+            "Attendance already exists. Duplicate insert prevented."
+        );
+
+        return false;
+    }
+
+
     const attendanceData = {
 
         name: name,
@@ -362,6 +379,7 @@ async function saveAttendanceToSupabase(
             new Date().toLocaleString()
     };
 
+
     try {
 
         const response =
@@ -372,6 +390,7 @@ async function saveAttendanceToSupabase(
                     method: "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json",
 
@@ -393,6 +412,7 @@ async function saveAttendanceToSupabase(
                 }
             );
 
+
         if (!response.ok) {
 
             console.error(
@@ -403,7 +423,9 @@ async function saveAttendanceToSupabase(
             return false;
         }
 
+
         return true;
+
 
     } catch (error) {
 
@@ -415,7 +437,6 @@ async function saveAttendanceToSupabase(
         return false;
     }
 }
-
 
 // =============================
 // CHECK DUPLICATE
