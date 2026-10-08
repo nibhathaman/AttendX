@@ -78,9 +78,19 @@
                 Create Attendance Session
             </button>
 
-            <button onclick="viewAttendance()">
+            <button onclick="
+                const session = JSON.parse(localStorage.getItem('attendanceSession'));
+            
+                if (!session) {
+                    alert('No attendance session found.');
+                } else {
+                    window.location.href =
+                        'attendance.html?session=' +
+                        encodeURIComponent(session.sessionId);
+                }
+            ">
                 View Attendance
-            </button>
+             </button>
 
             <button onclick="endSession()">
                 End Attendance Session
