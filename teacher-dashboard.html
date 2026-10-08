@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -79,8 +80,10 @@
             </button>
 
             <button onclick="
-                const session = JSON.parse(localStorage.getItem('attendanceSession'));
-            
+                const session = JSON.parse(
+                    localStorage.getItem('attendanceSession')
+                );
+
                 if (!session) {
                     alert('No attendance session found.');
                 } else {
@@ -90,7 +93,7 @@
                 }
             ">
                 View Attendance
-             </button>
+            </button>
 
             <button onclick="endSession()">
                 End Attendance Session
@@ -103,30 +106,97 @@
 
     <script src="script.js"></script>
 
+
+    <!-- DASHBOARD SESSION AND ATTENDANCE COUNT -->
+
     <script>
-    window.onload = function () {
-    
-        const session =
-            JSON.parse(
-                localStorage.getItem("attendanceSession")
-            );
-    
-        if (session) {
-    
-            document.getElementById("dashboardSessionId").textContent =
+
+        window.onload = async function () {
+
+            const session =
+                JSON.parse(
+                    localStorage.getItem("attendanceSession")
+                );
+
+
+            if (!session) {
+                return;
+            }
+
+
+            document.getElementById(
+                "dashboardSessionId"
+            ).textContent =
                 session.sessionId;
-    
-            document.getElementById("dashboardSessionStatus").textContent =
+
+
+            document.getElementById(
+                "dashboardSessionStatus"
+            ).textContent =
                 session.status;
-    
-            document.getElementById("dashboardTotalPresent").textContent =
-                localStorage.getItem("attendanceCount") || "0";
-    
-        }
-    };
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        SUPABASE_URL +
+                        "/rest/v1/attendance" +
+                        "?select=id" +
+                        "&session_id=eq." +
+                        encodeURIComponent(
+                            session.sessionId
+                        ),
+                        {
+                            method: "GET",
+
+                            headers: {
+                                "apikey":
+                                    SUPABASE_KEY,
+
+                                "Authorization":
+                                    "Bearer " +
+                                    SUPABASE_KEY
+                            }
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    console.error(
+                        "Could not fetch attendance count."
+                    );
+
+                    return;
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                document.getElementById(
+                    "dashboardTotalPresent"
+                ).textContent =
+                    data.length;
+
+
+            } catch (error) {
+
+                console.error(
+                    "Attendance count error:",
+                    error
+                );
+
+            }
+
+        };
+
     </script>
-    
+
 
 </body>
 
 </html>
+```
