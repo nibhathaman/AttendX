@@ -58,10 +58,11 @@ function createSession() {
         "attendanceRecords"
     );
 
+    console.log("NEW SESSION CREATED:", session);
+
     window.location.href =
         "qr-session.html";
 }
-
 
 // -----------------------------
 // VIEW ATTENDANCE
@@ -73,6 +74,8 @@ function viewAttendance() {
         JSON.parse(
             localStorage.getItem("attendanceSession")
         );
+
+    console.log("VIEW ATTENDANCE SESSION:", session);
 
     if (!session) {
         alert("No attendance session found.");
