@@ -11,6 +11,7 @@
 
     <!-- QR Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -192,13 +193,41 @@
 
         }
 
-
+        
         // -----------------------------
         // HANDLE SCANNED QR
         // -----------------------------
+        async function saveAttendanceToSupabase(
+            name,
+            roll,
+            sessionId
+        ) {
+            const { error } = await supabaseClient
+                .from("attendance")
+                .insert([
+                    {
+                        name: name,
+                        roll_number: roll,
+                        status: "Present",
+                        session_id: sessionId,
+                        attendance_time: new Date().toLocaleString()
+                    }
+                ]);
 
-        function handleScannedQR(decodedText) {
+            if (error) {
+                console.error(error);
+                alert("Attendance could not be saved.");
+                return false;
+            }
 
+            return true;
+        }
+        async function handleScannedQR(decodedText) {
+            const name =
+                localStorage.getItem("studentName");
+
+            const roll =
+                localStorage.getItem("studentRoll");
             try {
 
                 const qrURL =
@@ -225,7 +254,16 @@
                     "scannedSessionId",
                     sessionId
                 );
+                const saved =
+                    await saveAttendanceToSupabase(
+                        name,
+                        roll,
+                        sessionId
+                    );
 
+                if (!saved) {
+                    return;
+                }
 
                 document.getElementById(
                     "scanMessage"
@@ -249,8 +287,13 @@
             }
 
         }
+        const supabaseClient = window.supabase.createClient(
+        "https://drmhmtjhubswubvlkqvq.supabase.co",
+        "YOUR_PUBLISHABLE_KEY"
+    );    
 
     </script>
+
 
 </body>
 
