@@ -407,7 +407,7 @@ async function saveAttendanceToSupabase(
     sessionId,
     qrData
 ) {
-
+   console.log("SESSION ID BEING SENT:", sessionId);
    const attendanceData = {
 
     name: name,
