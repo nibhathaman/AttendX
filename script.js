@@ -69,8 +69,32 @@ function createSession() {
 
 function viewAttendance() {
 
+    const sessionIdElement =
+        document.getElementById("dashboardSessionId");
+
+    if (!sessionIdElement) {
+
+        alert("Session ID not found.");
+
+        return;
+    }
+
+    const sessionId =
+        sessionIdElement.textContent.trim();
+
+    if (
+        !sessionId ||
+        sessionId === "No session"
+    ) {
+
+        alert("No attendance session found.");
+
+        return;
+    }
+
     window.location.href =
-        "attendance.html";
+        "attendance.html?session=" +
+        encodeURIComponent(sessionId);
 }
 
 
