@@ -408,21 +408,21 @@ async function saveAttendanceToSupabase(
     qrData
 ) {
 
-    const attendanceData = {
+   const attendanceData = {
 
-        name: name,
+    name: name,
 
-        roll_number: rollNumber,
+    roll_number: rollNumber,
 
-        status: "Present",
+    status: "Present",
 
-        session_id: sessionId,
+    session_id:
+        String(sessionId).match(/^SESSION-\d+/)?.[0] || sessionId,
 
-        attendance_time:
-            new Date().toLocaleString()
+    attendance_time:
+        new Date().toLocaleString()
 
-    };
-
+};
 
     try {
 
