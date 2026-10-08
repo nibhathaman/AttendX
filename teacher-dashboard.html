@@ -101,13 +101,31 @@
     </main>
 
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js"></script>
+
     <script>
-    console.log(
-        "DASHBOARD SESSION:",
-        localStorage.getItem("attendanceSession")
-    );
+    window.onload = function () {
+    
+        const session =
+            JSON.parse(
+                localStorage.getItem("attendanceSession")
+            );
+    
+        if (session) {
+    
+            document.getElementById("dashboardSessionId").textContent =
+                session.sessionId;
+    
+            document.getElementById("dashboardSessionStatus").textContent =
+                session.status;
+    
+            document.getElementById("dashboardTotalPresent").textContent =
+                localStorage.getItem("attendanceCount") || "0";
+    
+        }
+    };
     </script>
+    
 
 </body>
 
