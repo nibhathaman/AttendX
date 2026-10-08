@@ -6,14 +6,13 @@
     <meta charset="UTF-8">
 
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+        content="width=device-width, initial-scale=1.0">
 
     <title>AttendX - Attendance Records</title>
 
     <link rel="stylesheet"
-          href="style.css">
+        href="style.css">
 
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
@@ -40,17 +39,25 @@
 
                 <p>
                     <strong>Session ID:</strong>
-                    <span id="sessionId">Loading...</span>
+                    <span id="sessionId">
+                        Loading...
+                    </span>
                 </p>
+
 
                 <p>
                     <strong>Status:</strong>
-                    <span id="sessionStatus">Loading...</span>
+                    <span id="sessionStatus">
+                        Loading...
+                    </span>
                 </p>
+
 
                 <p>
                     <strong>Total Students Present:</strong>
-                    <span id="totalPresent">0</span>
+                    <span id="totalPresent">
+                        0
+                    </span>
                 </p>
 
             </div>
@@ -94,24 +101,32 @@
 
 
         // --------------------------------
+        // GET SESSION FROM URL
+        // --------------------------------
+
+        const urlParams =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const currentSessionId =
+            urlParams.get("session");
+
+
+        // --------------------------------
         // LOAD ATTENDANCE
         // --------------------------------
 
         async function loadAttendanceFromSupabase() {
 
-            const session =
-                JSON.parse(
-                    localStorage.getItem("attendanceSession")
-                );
-
-
-            if (!session) {
+            if (!currentSessionId) {
 
                 document.getElementById("sessionId").innerText =
                     "No session found";
 
                 document.getElementById("sessionStatus").innerText =
-                    "No session found";
+                    "Inactive";
 
                 document.getElementById("attendanceList").innerHTML =
                     "<p>No attendance session found.</p>";
@@ -120,25 +135,65 @@
             }
 
 
+            // Show the EXACT session ID received from dashboard
+
             document.getElementById("sessionId").innerText =
-                session.sessionId;
+                currentSessionId;
 
-            document.getElementById("sessionStatus").innerText =
-                session.status;
 
+            // Get status from existing local session
+
+            const storedSession =
+                JSON.parse(
+                    localStorage.getItem(
+                        "attendanceSession"
+                    )
+                );
+
+
+            if (
+                storedSession &&
+                storedSession.sessionId === currentSessionId
+            ) {
+
+                document.getElementById(
+                    "sessionStatus"
+                ).innerText =
+                    storedSession.status;
+
+            }
+
+            else {
+
+                document.getElementById(
+                    "sessionStatus"
+                ).innerText =
+                    "Active";
+
+            }
+
+
+            // --------------------------------
+            // FETCH RECORDS FROM SUPABASE
+            // --------------------------------
 
             const { data, error } =
                 await attendanceSupabase
                     .from("attendance")
                     .select("*")
-                    .eq("session_id", session.sessionId);
+                    .eq(
+                        "session_id",
+                        currentSessionId
+                    );
 
 
             if (error) {
 
                 console.error(error);
 
-                document.getElementById("attendanceList").innerHTML =
+                document.getElementById(
+                    "attendanceList"
+                ).innerHTML =
                     "<p>Error loading attendance records.</p>";
 
                 alert(
@@ -150,12 +205,16 @@
             }
 
 
-            document.getElementById("totalPresent").innerText =
+            document.getElementById(
+                "totalPresent"
+            ).innerText =
                 data.length;
 
 
             const attendanceList =
-                document.getElementById("attendanceList");
+                document.getElementById(
+                    "attendanceList"
+                );
 
 
             if (data.length === 0) {
@@ -170,35 +229,169 @@
             attendanceList.innerHTML = "";
 
 
-            data.forEach(function(record, index) {
+            data.forEach(
+                function(record, index) {
 
-                const recordDiv =
-                    document.createElement("div");
-
-
-                recordDiv.innerHTML = `
-                    <p>
-                        <strong>${index + 1}.</strong>
-                        ${record.name}
-                        |
-                        ${record.roll_number}
-                        |
-                        ${record.status}
-                        |
-                        ${record.attendance_time}
-                    </p>
-                `;
+                    const recordDiv =
+                        document.createElement(
+                            "div"
+                        );
 
 
-                attendanceList.appendChild(recordDiv);
+                    recordDiv.innerHTML = `
+                        <p>
+                            <strong>${index + 1}.</strong>
+                            ${record.name}
+                            |
+                            ${record.roll_number}
+                            |
+                            ${record.status}
+                            |
+                            ${record.attendance_time}
+                        </p>
+                    `;
 
-            });
+
+                    attendanceList.appendChild(
+                        recordDiv
+                    );
+
+                }
+            );
 
         }
 
 
         // --------------------------------
-        // LOAD WHEN PAGE OPENS
+        // DOWNLOAD ATTENDANCE REPORT
+        // --------------------------------
+
+        async function downloadAttendanceReport() {
+
+            if (!currentSessionId) {
+
+                alert(
+                    "No attendance session found."
+                );
+
+                return;
+            }
+
+
+            try {
+
+                const { data, error } =
+                    await attendanceSupabase
+                        .from("attendance")
+                        .select("*")
+                        .eq(
+                            "session_id",
+                            currentSessionId
+                        );
+
+
+                if (error) {
+
+                    alert(
+                        "Could not load attendance records."
+                    );
+
+                    return;
+                }
+
+
+                if (!data || data.length === 0) {
+
+                    alert(
+                        "No attendance records available for this session."
+                    );
+
+                    return;
+                }
+
+
+                let csv =
+                    "Name,Roll Number,Status,Session ID,Time\n";
+
+
+                data.forEach(
+                    function(record) {
+
+                        csv +=
+                            `"${record.name}",` +
+                            `"${record.roll_number}",` +
+                            `"${record.status}",` +
+                            `"${record.session_id}",` +
+                            `"${record.attendance_time}"\n`;
+
+                    }
+                );
+
+
+                const blob =
+                    new Blob(
+                        [csv],
+                        {
+                            type:
+                                "text/csv;charset=utf-8;"
+                        }
+                    );
+
+
+                const urlObject =
+                    URL.createObjectURL(
+                        blob
+                    );
+
+
+                const link =
+                    document.createElement(
+                        "a"
+                    );
+
+
+                link.href =
+                    urlObject;
+
+
+                link.download =
+                    "AttendX_Attendance_Report.csv";
+
+
+                document.body.appendChild(
+                    link
+                );
+
+
+                link.click();
+
+
+                document.body.removeChild(
+                    link
+                );
+
+
+                URL.revokeObjectURL(
+                    urlObject
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Could not download attendance report."
+                );
+
+            }
+
+        }
+
+
+        // --------------------------------
+        // LOAD PAGE
         // --------------------------------
 
         loadAttendanceFromSupabase();
