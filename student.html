@@ -5,13 +5,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>AttendX - Student</title>
+    <title>AttendX - Student Portal</title>
 
-    <link rel="stylesheet" href="style.css">
-
-    <!-- QR Scanner Library -->
+    <!-- QR Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            color: #222;
+            text-align: center;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+        }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 12px 25px;
+            margin: 15px;
+            background: #1f2937;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #scannerSection {
+            margin-top: 25px;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 350px;
+            margin: auto;
+        }
+
+        #scanMessage {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
@@ -21,89 +81,62 @@
         <p>Student Portal</p>
     </header>
 
-    <main>
-        <section class="hero">
+    <div class="container">
 
-            <h2>Mark Attendance</h2>
+        <h2>Student Attendance</h2>
 
-            <input
-                type="text"
-                id="studentName"
-                placeholder="Enter your name"
-            >
+        <input
+            type="text"
+            id="studentName"
+            placeholder="Enter Name"
+        >
 
-            <br><br>
+        <input
+            type="text"
+            id="studentRoll"
+            placeholder="Enter Roll Number"
+        >
 
-            <input
-                type="text"
-                id="studentRoll"
-                placeholder="Enter roll number"
-            >
+        <input
+            type="password"
+            id="studentPassword"
+            placeholder="Enter Password"
+        >
 
-            <br><br>
+        <br>
 
-            <input
-                type="password"
-                id="studentPassword"
-                placeholder="Enter password"
-            >
+        <button onclick="startStudentScanner()">
+            Start Scanner
+        </button>
 
-            <br><br>
+        <div id="scannerSection" style="display:none;">
 
-            <button onclick="startStudentScanner()">
-                Scan QR Code
-            </button>
+            <h3>Scan Attendance QR</h3>
 
-            <br><br>
+            <div id="reader"></div>
 
-            <div id="scannerSection" style="display:none;">
+            <p id="scanMessage"></p>
 
-                <h3>Scan Attendance QR</h3>
+        </div>
 
-                <div
-                    id="reader"
-                    style="width:300px; max-width:100%; margin:auto;">
-                </div>
-
-                <p id="scanMessage"></p>
-
-            </div>
-
-        </section>
-    </main>
+    </div>
 
 
     <script>
 
-        // -----------------------------
-        // LOAD LOCKED STUDENT
-        // -----------------------------
+        // --------------------------------
+        // SUPABASE CONNECTION
+        // --------------------------------
 
-        const lockedStudent =
-            JSON.parse(
-                localStorage.getItem("lockedStudent")
-            );
-
-        if (lockedStudent) {
-
-            document.getElementById("studentName").value =
-                lockedStudent.name;
-
-            document.getElementById("studentRoll").value =
-                lockedStudent.rollNumber;
-
-            document.getElementById("studentPassword").value =
-                lockedStudent.password;
-
-            document.getElementById("studentName").readOnly = true;
-            document.getElementById("studentRoll").readOnly = true;
-            document.getElementById("studentPassword").readOnly = true;
-        }
+        const supabaseClient = window.supabase.createClient(
+            "https://drmhmtjhubswubvlkqvq.supabase.co",
+            "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP"
+        );
 
 
-        // -----------------------------
-        // START STUDENT QR SCANNER
-        // -----------------------------
+        // --------------------------------
+        // START STUDENT SCANNER
+        // --------------------------------
 
         function startStudentScanner() {
 
@@ -113,76 +146,50 @@
             const roll =
                 document.getElementById("studentRoll").value.trim();
 
-            const password =
-                document.getElementById("studentPassword").value.trim();
+            if (name === "" || roll === "") {
 
-
-            if (
-                name === "" ||
-                roll === "" ||
-                password === ""
-            ) {
-
-                alert(
-                    "Please enter your name, roll number and password."
-                );
-
+                alert("Please enter your name and roll number.");
                 return;
+
             }
 
-
-            // Save student information
-
-            localStorage.setItem(
-                "studentName",
-                name
-            );
-
-            localStorage.setItem(
-                "studentRoll",
-                roll
-            );
-
-
-            // Show scanner
+            localStorage.setItem("studentName", name);
+            localStorage.setItem("studentRoll", roll);
 
             document.getElementById(
                 "scannerSection"
             ).style.display = "block";
 
 
-            const scanner =
+            const html5QrCode =
                 new Html5Qrcode("reader");
 
 
-            scanner.start(
+            html5QrCode.start(
 
-                {
-                    facingMode: "environment"
-                },
+                { facingMode: "environment" },
 
                 {
                     fps: 10,
                     qrbox: 250
                 },
 
-                function(decodedText) {
+                async function(decodedText) {
 
-                    scanner.stop();
+                    await handleScannedQR(decodedText);
 
-                    handleScannedQR(decodedText);
+                    html5QrCode.stop();
 
                 },
 
                 function(errorMessage) {
 
-                    // Scanner keeps looking for QR
+                    // Scanner continuously checks for QR.
+                    // No action needed for every failed frame.
 
                 }
 
-            )
-
-            .catch(function(error) {
+            ).catch(function(error) {
 
                 document.getElementById(
                     "scanMessage"
@@ -193,41 +200,64 @@
 
         }
 
-        
-        // -----------------------------
-        // HANDLE SCANNED QR
-        // -----------------------------
+
+        // --------------------------------
+        // SAVE ATTENDANCE TO SUPABASE
+        // --------------------------------
+
         async function saveAttendanceToSupabase(
             name,
             roll,
             sessionId
         ) {
-            const { error } = await supabaseClient
-                .from("attendance")
-                .insert([
-                    {
-                        name: name,
-                        roll_number: roll,
-                        status: "Present",
-                        session_id: sessionId,
-                        attendance_time: new Date().toLocaleString()
-                    }
-                ]);
+
+            const { error } =
+                await supabaseClient
+                    .from("attendance")
+                    .insert([
+                        {
+                            name: name,
+                            roll_number: roll,
+                            status: "Present",
+                            session_id: sessionId,
+                            attendance_time:
+                                new Date().toLocaleString()
+                        }
+                    ]);
+
 
             if (error) {
-                alert("SUPABASE ERROR: " + error.message);
+
+                console.error(error);
+
+                alert(
+                    "SUPABASE ERROR: " +
+                    error.message
+                );
+
                 return false;
+
             }
 
             return true;
-        }
-        async function handleScannedQR(decodedText) {
-            const name =
-                localStorage.getItem("studentName");
 
-            const roll =
-                localStorage.getItem("studentRoll");
+        }
+
+
+        // --------------------------------
+        // HANDLE SCANNED QR
+        // --------------------------------
+
+        async function handleScannedQR(decodedText) {
+
             try {
+
+                const name =
+                    localStorage.getItem("studentName");
+
+                const roll =
+                    localStorage.getItem("studentRoll");
+
 
                 const qrURL =
                     new URL(decodedText);
@@ -240,19 +270,20 @@
                 if (!sessionId) {
 
                     alert(
-                        "Invalid attendance QR code."
+                        "Invalid QR code. Please scan the AttendX QR code."
                     );
 
                     return;
+
                 }
 
-
-                // Save scanned session
 
                 localStorage.setItem(
                     "scannedSessionId",
                     sessionId
                 );
+
+
                 const saved =
                     await saveAttendanceToSupabase(
                         name,
@@ -260,17 +291,15 @@
                         sessionId
                     );
 
+
                 if (!saved) {
+
                     return;
+
                 }
 
-                document.getElementById(
-                    "scanMessage"
-                ).innerText =
-                    "QR scanned successfully!";
 
-
-                // Go to attendance processing page
+                // Attendance saved successfully
 
                 window.location.href =
                     "attendance-success.html";
@@ -279,6 +308,8 @@
 
             catch (error) {
 
+                console.error(error);
+
                 alert(
                     "Invalid QR code. Please scan the AttendX QR code."
                 );
@@ -286,13 +317,8 @@
             }
 
         }
-        const supabaseClient = window.supabase.createClient(
-        "https://drmhmtjhubswubvlkqvq.supabase.co",
-        "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP"
-    );    
 
     </script>
-
 
 </body>
 
