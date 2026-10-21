@@ -654,6 +654,8 @@ function startScanner() {
             } catch (error) {
                 console.error("Attendance processing error:", error);
                 alert("An error occurred while processing attendance.");
+            } finally {
+                attendanceScanProcessing = false;
             }
         },
 
