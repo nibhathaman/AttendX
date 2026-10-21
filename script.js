@@ -160,6 +160,7 @@ function endSession() {
 // GENERATE QR
 // =============================
 
+
 function generateQR() {
 
     const qrContainer =
@@ -171,21 +172,37 @@ function generateQR() {
 
     qrContainer.innerHTML = "";
 
-    const session =
-        JSON.parse(
-            localStorage.getItem("attendanceSession")
-        );
+    const teacherId =
+        localStorage.getItem("currentTeacher");
 
-    if (!session) {
-
+    if (!teacherId) {
         qrContainer.innerHTML =
-            "<p>No attendance session found.</p>";
-
+            "<p>Please log in first.</p>";
         return;
     }
 
-    const qrTimestamp =
-        Date.now();
+    const sessionData =
+        localStorage.getItem(
+            "attendanceSession_" + teacherId
+        );
+
+    const session = sessionData
+        ? JSON.parse(sessionData)
+        : null;
+
+    if (!session || !session.sessionId) {
+        qrContainer.innerHTML =
+            "<p>No attendance session found.</p>";
+        return;
+    }
+
+    if (session.status !== "Active") {
+        qrContainer.innerHTML =
+            "<p>This attendance session has ended.</p>";
+        return;
+    }
+
+    const qrTimestamp = Date.now();
 
     const studentURL =
         "https://nibhathaman.github.io/AttendX/student.html" +
