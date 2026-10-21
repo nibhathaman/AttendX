@@ -1,33 +1,24 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>AttendX - Teacher Dashboard</title>
 
-    <link rel="stylesheet"
-        href="style.css">
-
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
     <header>
-
         <h1>AttendX</h1>
-
         <p>Teacher Dashboard</p>
-
     </header>
 
-
     <main>
-
         <section class="hero">
 
             <h2>Welcome, Teacher</h2>
@@ -37,7 +28,6 @@
             </p>
 
             <br>
-
 
             <!-- CURRENT SESSION INFORMATION -->
 
@@ -61,16 +51,12 @@
 
                 <p>
                     <strong>Students Present:</strong>
-                    <span id="dashboardTotalPresent">
-                        0
-                    </span>
+                    <span id="dashboardTotalPresent">0</span>
                 </p>
 
             </div>
 
-
             <br>
-
 
             <!-- TEACHER ACTIONS -->
 
@@ -78,19 +64,7 @@
                 Create Attendance Session
             </button>
 
-            <button onclick="
-                const session = JSON.parse(
-                    localStorage.getItem('attendanceSession')
-                );
-
-                if (!session) {
-                    alert('No attendance session found.');
-                } else {
-                    window.location.href =
-                        'attendance.html?session=' +
-                        encodeURIComponent(session.sessionId);
-                }
-            ">
+            <button onclick="viewTeacherAttendance()">
                 View Attendance
             </button>
 
@@ -99,12 +73,9 @@
             </button>
 
         </section>
-
     </main>
 
-
     <script src="script.js"></script>
-
 
     <!-- DASHBOARD SESSION AND ATTENDANCE COUNT -->
 
@@ -112,92 +83,133 @@
 
         window.onload = async function () {
 
-           const teacherId = localStorage.getItem("currentTeacher");
-           if (!teacherId) {
-               window.location.href = "index.html";
-               return;
-            }
+            async function refreshDashboard() {
 
-            const session = JSON.parse(
-                localStorage.getItem("attendanceSession_" + teacherId)
-            );
+                const teacherId =
+                    localStorage.getItem("currentTeacher");
 
-            if (!session) {
-                return;
-            }
+                if (!teacherId) {
+                    window.location.href = "index.html";
+                    return;
+                }
 
+                let session;
 
-            document.getElementById(
-                "dashboardSessionId"
-            ).textContent =
-                session.sessionId;
-
-
-            document.getElementById(
-                "dashboardSessionStatus"
-            ).textContent =
-                session.status;
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        SUPABASE_URL +
-                        "/rest/v1/attendance" +
-                        "?select=id" +
-                        "&session_id=eq." +
-                        encodeURIComponent(
-                            session.sessionId
-                        ),
-                        {
-                            method: "GET",
-
-                            headers: {
-                                "apikey":
-                                    SUPABASE_KEY,
-
-                                "Authorization":
-                                    "Bearer " +
-                                    SUPABASE_KEY
-                            }
-                        }
+                try {
+                    session = JSON.parse(
+                        localStorage.getItem(
+                            "attendanceSession_" + teacherId
+                        ) || "null"
                     );
-
-
-                if (!response.ok) {
-
+                } catch (error) {
                     console.error(
-                        "Could not fetch attendance count."
+                        "Could not read teacher session:",
+                        error
                     );
+                    return;
+                }
+
+                if (!session) {
+                    document.getElementById(
+                        "dashboardSessionId"
+                    ).textContent = "No session";
+
+                    document.getElementById(
+                        "dashboardSessionStatus"
+                    ).textContent = "No active session";
+
+                    document.getElementById(
+                        "dashboardTotalPresent"
+                    ).textContent = "0";
 
                     return;
                 }
 
-
-                const data =
-                    await response.json();
-
+                document.getElementById(
+                    "dashboardSessionId"
+                ).textContent = session.sessionId;
 
                 document.getElementById(
-                    "dashboardTotalPresent"
-                ).textContent =
-                    data.length;
+                    "dashboardSessionStatus"
+                ).textContent = session.status;
 
+                try {
+                    const response = await fetch(
+                        SUPABASE_URL +
+                        "/rest/v1/attendance" +
+                        "?select=id" +
+                        "&session_id=eq." +
+                        encodeURIComponent(session.sessionId),
+                        {
+                            method: "GET",
+                            headers: {
+                                "apikey": SUPABASE_KEY,
+                                "Authorization":
+                                    "Bearer " + SUPABASE_KEY
+                            }
+                        }
+                    );
 
-            } catch (error) {
+                    if (!response.ok) {
+                        console.error(
+                            "Could not refresh attendance count:",
+                            response.status
+                        );
+                        return;
+                    }
 
-                console.error(
-                    "Attendance count error:",
-                    error
-                );
+                    const data = await response.json();
 
+                    document.getElementById(
+                        "dashboardTotalPresent"
+                    ).textContent = data.length;
+
+                } catch (error) {
+                    console.error(
+                        "Dashboard refresh error:",
+                        error
+                    );
+                }
             }
+
+            // Load attendance count immediately.
+            await refreshDashboard();
+
+            // Automatically refresh every 3 seconds.
+            setInterval(refreshDashboard, 3000);
 
         };
 
-    </script>
 
+        // Open attendance for the currently logged-in teacher.
+        function viewTeacherAttendance() {
+
+            const teacherId =
+                localStorage.getItem("currentTeacher");
+
+            if (!teacherId) {
+                alert("Please log in first.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const session = JSON.parse(
+                localStorage.getItem(
+                    "attendanceSession_" + teacherId
+                ) || "null"
+            );
+
+            if (!session) {
+                alert("No attendance session found.");
+                return;
+            }
+
+            window.location.href =
+                "attendance.html?session=" +
+                encodeURIComponent(session.sessionId);
+        }
+
+    </script>
 
 </body>
 
