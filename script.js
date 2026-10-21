@@ -1,7 +1,7 @@
 const SUPABASE_URL = "https://drmhmtjhubswubvlkqvq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_xCMcL-qx6NDx7UWW1Dbvmw_j0pk29nP";
 
-
+const attendanceInProgress = new Set();
 // =============================
 // BASIC NAVIGATION
 // =============================
@@ -342,99 +342,70 @@ async function loginStudent() {
 // SAVE ATTENDANCE
 // =============================
 
-async function saveAttendanceToSupabase(
-    name,
-    rollNumber,
-    sessionId
-) {
 
-    // Check one final time before inserting
-    const alreadyMarked =
-        await checkAttendanceAlreadyMarked(
+async function saveAttendanceToSupabase(name, rollNumber, sessionId) {
+    const lockKey = `${sessionId}::${rollNumber}`;
+
+    // Stop overlapping submissions for this student/session
+    if (attendanceInProgress.has(lockKey)) {
+        console.log("Attendance submission already in progress.");
+        return false;
+    }
+
+    attendanceInProgress.add(lockKey);
+
+    try {
+        // Check whether attendance already exists
+        const alreadyMarked = await checkAttendanceAlreadyMarked(
             rollNumber,
             sessionId
         );
 
-    if (alreadyMarked) {
+        if (alreadyMarked) {
+            console.log("Attendance already exists.");
+            return false;
+        }
 
-        console.log(
-            "Attendance already exists. Duplicate insert prevented."
+        const attendanceData = {
+            name: name,
+            roll_number: rollNumber,
+            status: "Present",
+            session_id: sessionId,
+            attendance_time: new Date().toLocaleString()
+        };
+
+        const response = await fetch(
+            SUPABASE_URL + "/rest/v1/attendance",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": "Bearer " + SUPABASE_KEY,
+                    "Prefer": "return=minimal"
+                },
+                body: JSON.stringify(attendanceData)
+            }
         );
 
-        return false;
-    }
-
-
-    const attendanceData = {
-
-        name: name,
-
-        roll_number: rollNumber,
-
-        status: "Present",
-
-        session_id: sessionId,
-
-        attendance_time:
-            new Date().toLocaleString()
-    };
-
-
-    try {
-
-        const response =
-            await fetch(
-                SUPABASE_URL +
-                "/rest/v1/attendance",
-                {
-                    method: "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "apikey":
-                            SUPABASE_KEY,
-
-                        "Authorization":
-                            "Bearer " +
-                            SUPABASE_KEY,
-
-                        "Prefer":
-                            "return=minimal"
-                    },
-
-                    body:
-                        JSON.stringify(
-                            attendanceData
-                        )
-                }
-            );
-
-
         if (!response.ok) {
-
             console.error(
                 "Supabase Error:",
                 await response.text()
             );
-
             return false;
         }
 
-
+        console.log("Attendance saved successfully.");
         return true;
 
-
     } catch (error) {
-
-        console.error(
-            "Supabase connection error:",
-            error
-        );
-
+        console.error("Supabase connection error:", error);
         return false;
+
+    } finally {
+        // Always release the lock
+        attendanceInProgress.delete(lockKey);
     }
 }
 
