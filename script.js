@@ -818,49 +818,44 @@ async function scanQRImage() {
 // DASHBOARD
 // =============================
 
-if (
-    document.getElementById(
-        "dashboardSessionId"
-    )
-) {
 
-    const session =
-        JSON.parse(
-            localStorage.getItem(
-                "attendanceSession"
-            )
-        );
+if (document.getElementById("dashboardSessionId")) {
+    const teacherId = localStorage.getItem("currentTeacher");
 
-    if (session) {
+    const sessionKey = teacherId
+        ? "attendanceSession_" + teacherId
+        : null;
 
-        document.getElementById(
-            "dashboardSessionId"
-        ).textContent =
-            session.sessionId;
+    const sessionData = sessionKey
+        ? localStorage.getItem(sessionKey)
+        : null;
 
-        document.getElementById(
-            "dashboardSessionStatus"
-        ).textContent =
-            session.status;
+    const session = sessionData
+        ? JSON.parse(sessionData)
+        : null;
 
+    const sessionIdElement =
+        document.getElementById("dashboardSessionId");
+
+    const sessionStatusElement =
+        document.getElementById("dashboardSessionStatus");
+
+    const totalPresentElement =
+        document.getElementById("dashboardTotalPresent");
+
+    if (session && session.sessionId) {
+        sessionIdElement.textContent = session.sessionId;
+        sessionStatusElement.textContent = session.status;
     } else {
+        sessionIdElement.textContent = "No session";
+        sessionStatusElement.textContent = "Inactive";
 
-        document.getElementById(
-            "dashboardSessionId"
-        ).textContent =
-            "No session";
-
-        document.getElementById(
-            "dashboardSessionStatus"
-        ).textContent =
-            "Inactive";
-
-        document.getElementById(
-            "dashboardTotalPresent"
-        ).textContent =
-            "0";
+        if (totalPresentElement) {
+            totalPresentElement.textContent = "0";
+        }
     }
 }
+
 
 
 // =============================
