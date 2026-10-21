@@ -14,8 +14,8 @@ function studentLogin() {
     window.location.href = "student.html";
 }
 
-function loginTeacher() {
 
+function loginTeacher() {
     const teacherName =
         document.getElementById("teacherName").value.trim();
 
@@ -26,6 +26,10 @@ function loginTeacher() {
         alert("Please enter your username and password.");
         return;
     }
+
+    const teacherId = teacherName.toLowerCase();
+
+    localStorage.setItem("currentTeacher", teacherId);
 
     window.location.href = "teacher-dashboard.html";
 }
@@ -39,25 +43,38 @@ function goHome() {
 // CREATE SESSION
 // =============================
 
-function createSession() {
 
-    const sessionId =
-        "SESSION-" + Date.now();
+function createSession() {
+    const teacherId = localStorage.getItem("currentTeacher");
+
+    if (!teacherId) {
+        alert("Please log in first.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    const sessionId = "SESSION-" + Date.now();
 
     const session = {
         sessionId: sessionId,
         createdAt: Date.now(),
-        status: "Active"
+        status: "Active",
+        teacherId: teacherId
     };
+
+    localStorage.setItem(
+        "attendanceSession_" + teacherId,
+        JSON.stringify(session)
+    );
 
     localStorage.setItem(
         "attendanceSession",
         JSON.stringify(session)
     );
 
-    window.location.href =
-        "qr-session.html";
+    window.location.href = "qr-session.html";
 }
+
 
 
 // =============================
