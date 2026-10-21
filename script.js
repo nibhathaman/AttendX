@@ -569,120 +569,99 @@ function isQRExpired(decodedText) {
 // CAMERA SCANNER
 // =============================
 
-function startScanner() {
 
-    const scanner =
-        new Html5Qrcode("reader");
+let attendanceScanProcessing = false;
+
+function startScanner() {
+    const scanner = new Html5Qrcode("reader");
 
     scanner.start(
-
         { facingMode: "environment" },
-
         {
             fps: 10,
             qrbox: 250
         },
 
         async (decodedText) => {
-
-            await scanner.stop();
-
-            const lockedStudent =
-                JSON.parse(
-                    localStorage.getItem(
-                        "lockedStudent"
-                    )
-                );
-
-            if (!lockedStudent) {
-
-                alert(
-                    "No student account is linked to this device."
-                );
-
+            if (attendanceScanProcessing) {
                 return;
             }
 
-            const sessionId =
-                getSessionIdFromQR(
-                    decodedText
-                );
+            attendanceScanProcessing = true;
 
-            if (!sessionId) {
-
-                alert(
-                    "Invalid attendance QR code."
-                );
-
-                return;
+            try {
+                await scanner.stop();
+            } catch (error) {
+                console.error("Scanner stop error:", error);
             }
 
-            if (
-                isQRExpired(
-                    decodedText
-                )
-            ) {
-
-                alert(
-                    "This QR has expired. Please scan the latest QR."
+            try {
+                const lockedStudent = JSON.parse(
+                    localStorage.getItem("lockedStudent")
                 );
 
-                return;
-            }
+                if (!lockedStudent) {
+                    alert("No student account is linked to this device.");
+                    return;
+                }
 
-            const alreadyMarked =
-                await checkAttendanceAlreadyMarked(
-                    lockedStudent.rollNumber,
-                    sessionId
-                );
+                const sessionId = getSessionIdFromQR(decodedText);
 
-            if (alreadyMarked) {
+                if (!sessionId) {
+                    alert("Invalid attendance QR code.");
+                    return;
+                }
 
-                alert(
-                    "Attendance already marked for this session."
-                );
+                if (isQRExpired(decodedText)) {
+                    alert("This QR has expired. Please scan the latest QR.");
+                    return;
+                }
 
-                return;
-            }
+                const alreadyMarked =
+                    await checkAttendanceAlreadyMarked(
+                        lockedStudent.rollNumber,
+                        sessionId
+                    );
 
-            const saved =
-                await saveAttendanceToSupabase(
+                if (alreadyMarked) {
+                    alert("Attendance already marked for this session.");
+                    return;
+                }
+
+                const saved = await saveAttendanceToSupabase(
                     lockedStudent.name,
                     lockedStudent.rollNumber,
                     sessionId
                 );
 
-            if (!saved) {
+                if (!saved) {
+                    alert("Attendance could not be saved. Please try again.");
+                    return;
+                }
 
-                alert(
-                    "Attendance could not be saved. Please try again."
+                localStorage.setItem(
+                    "studentName",
+                    lockedStudent.name
                 );
 
-                return;
+                localStorage.setItem(
+                    "studentRoll",
+                    lockedStudent.rollNumber
+                );
+
+                window.location.href = "attendance-success.html";
+
+            } catch (error) {
+                console.error("Attendance processing error:", error);
+                alert("An error occurred while processing attendance.");
             }
-
-            localStorage.setItem(
-                "studentName",
-                lockedStudent.name
-            );
-
-            localStorage.setItem(
-                "studentRoll",
-                lockedStudent.rollNumber
-            );
-
-            window.location.href =
-                "attendance-success.html";
         },
 
         () => {}
     );
 }
 
-
-if (
-    document.getElementById("reader")
-) {
+if (document.getElementById("reader")) {
     startScanner();
 }
 
