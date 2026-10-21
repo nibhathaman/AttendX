@@ -109,35 +109,43 @@ function viewAttendance() {
 // END SESSION
 // =============================
 
+
 function endSession() {
 
-    const session =
-        JSON.parse(
-            localStorage.getItem("attendanceSession")
-        );
+    const teacherId =
+        localStorage.getItem("currentTeacher");
+
+    if (!teacherId) {
+        alert("Please log in first.");
+        return;
+    }
+
+    const sessionKey =
+        "attendanceSession_" + teacherId;
+
+    const sessionData =
+        localStorage.getItem(sessionKey);
+
+    const session = sessionData
+        ? JSON.parse(sessionData)
+        : null;
 
     if (!session) {
-
-        alert(
-            "No attendance session found."
-        );
-
+        alert("No attendance session found.");
         return;
     }
 
     if (session.status === "Ended") {
-
         alert(
             "This attendance session has already ended."
         );
-
         return;
     }
 
     session.status = "Ended";
 
     localStorage.setItem(
-        "attendanceSession",
+        sessionKey,
         JSON.stringify(session)
     );
 
@@ -154,6 +162,7 @@ function endSession() {
         status.textContent = "Ended";
     }
 }
+
 
 
 // =============================
