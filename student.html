@@ -272,15 +272,8 @@
                     .limit(1);
 
                 if (checkError) {
+                    alert(JSON.stringify(checkError, null, 2));
                     console.error("Duplicate check failed:", checkError);
-
-                    alert(
-                        "Supabase error: " +
-                         checkError.message +
-                         "\nCode: " +
-                         checkError.code
-                    );
-
                     return false;
                 }
 
