@@ -275,7 +275,10 @@
                     console.error("Duplicate check failed:", checkError);
 
                     alert(
-                        "Could not verify existing attendance. Please try again."
+                        "Supabase error: " +
+                         checkError.message +
+                         "\nCode: " +
+                         checkError.code
                     );
 
                     return false;
