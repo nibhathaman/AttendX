@@ -102,31 +102,28 @@
 // LOAD LOCKED STUDENT
 // -----------------------------
 
-        const nameInput = document.getElementById("studentName");
-        const rollInput = document.getElementById("studentRoll");
-        const passwordInput = document.getElementById("studentPassword");
+        // -----------------------------
+// LOAD LOCKED STUDENT
+// -----------------------------
+
+        const lockedStudent = JSON.parse(
+            localStorage.getItem("lockedStudent") || "null"
+        );
         
-        try {
-            const savedData = localStorage.getItem("lockedStudent");
-            const lockedStudent = savedData ? JSON.parse(savedData) : null;
+        if (lockedStudent) {
+            document.getElementById("studentName").value =
+                lockedStudent.name || "";
         
-            if (lockedStudent && lockedStudent.name && lockedStudent.rollNumber) {
-                nameInput.value = lockedStudent.name;
-                rollInput.value = lockedStudent.rollNumber;
+            document.getElementById("studentRoll").value =
+                lockedStudent.rollNumber || "";
         
-                nameInput.readOnly = true;
-                rollInput.readOnly = true;
-        
-                if (lockedStudent.password) {
-                    passwordInput.value = lockedStudent.password;
-                }
-        
-                passwordInput.readOnly = true;
-            }
-        } catch (error) {
-            console.error("Could not load locked student:", error);
+            document.getElementById("studentName").readOnly = true;
+            document.getElementById("studentRoll").readOnly = true;
         }
 
+// -----------------------------
+// START STUDENT QR SCANNER
+// -----------------------------
 
 // -----------------------------
 // START STUDENT QR SCANNER
