@@ -300,7 +300,9 @@
 
                             |
 
-                            ${record.attendance_time}
+                            ${new Date(record.attendance_time).toLocaleString("en-IN", {
+                                timeZone: "Asia/Kolkata"
+                            })}
 
                         </p>
 
