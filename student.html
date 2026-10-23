@@ -97,23 +97,26 @@
         // LOAD LOCKED STUDENT
         // -----------------------------
 
-        const lockedStudent =
-            JSON.parse(localStorage.getItem("lockedStudent"));
-
+        
+        const lockedStudent = JSON.parse(
+            localStorage.getItem("lockedStudent")
+        );
+        
         if (lockedStudent) {
             document.getElementById("studentName").value =
                 lockedStudent.name || "";
-
+        
             document.getElementById("studentRoll").value =
                 lockedStudent.rollNumber || "";
-
+        
             document.getElementById("studentPassword").value =
                 lockedStudent.password || "";
-
+        
             document.getElementById("studentName").readOnly = true;
             document.getElementById("studentRoll").readOnly = true;
             document.getElementById("studentPassword").readOnly = true;
         }
+
 
         // -----------------------------
         // START STUDENT QR SCANNER
