@@ -142,8 +142,33 @@
                 return;
             }
 
+            
+            const existingLock = localStorage.getItem("lockedStudent");
+            
+            if (existingLock) {
+                const savedStudent = JSON.parse(existingLock);
+            
+                if (
+                    savedStudent.name !== name ||
+                    savedStudent.rollNumber !== roll
+                ) {
+                    alert("Student credentials are locked on this browser.");
+                    return;
+                }
+            } else {
+                localStorage.setItem("lockedStudent", JSON.stringify({
+                    name: name,
+                    rollNumber: roll
+                }));
+            }
+            
             localStorage.setItem("studentName", name);
             localStorage.setItem("studentRoll", roll);
+            
+            document.getElementById("studentName").readOnly = true;
+            document.getElementById("studentRoll").readOnly = true;
+            document.getElementById("studentPassword").readOnly = true;
+
 
             document.getElementById("scannerSection").style.display = "block";
             document.getElementById("scanButton").disabled = true;
