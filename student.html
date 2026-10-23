@@ -98,24 +98,39 @@
         // -----------------------------
 
         
-        const lockedStudent = JSON.parse(
-            localStorage.getItem("lockedStudent")
-        );
+        // -----------------------------
+// LOAD LOCKED STUDENT
+// -----------------------------
+
+        const nameInput = document.getElementById("studentName");
+        const rollInput = document.getElementById("studentRoll");
+        const passwordInput = document.getElementById("studentPassword");
         
-        if (lockedStudent) {
-            document.getElementById("studentName").value =
-                lockedStudent.name || "";
+        try {
+            const savedData = localStorage.getItem("lockedStudent");
+            const lockedStudent = savedData ? JSON.parse(savedData) : null;
         
-            document.getElementById("studentRoll").value =
-                lockedStudent.rollNumber || "";
+            if (lockedStudent && lockedStudent.name && lockedStudent.rollNumber) {
+                nameInput.value = lockedStudent.name;
+                rollInput.value = lockedStudent.rollNumber;
         
-            document.getElementById("studentPassword").value =
-                lockedStudent.password || "";
+                nameInput.readOnly = true;
+                rollInput.readOnly = true;
         
-            document.getElementById("studentName").readOnly = true;
-            document.getElementById("studentRoll").readOnly = true;
-            document.getElementById("studentPassword").readOnly = true;
+                if (lockedStudent.password) {
+                    passwordInput.value = lockedStudent.password;
+                }
+        
+                passwordInput.readOnly = true;
+            }
+        } catch (error) {
+            console.error("Could not load locked student:", error);
         }
+
+
+// -----------------------------
+// START STUDENT QR SCANNER
+// -----------------------------
 
 
         // -----------------------------
