@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,8 +10,10 @@
 
     <link rel="stylesheet" href="style.css">
 
-    <!-- QR Scanner Library -->
+    <!-- QR Scanner -->
     <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -94,41 +97,24 @@
         let scanProcessing = false;
 
         // -----------------------------
-        // LOAD LOCKED STUDENT
+        // LOAD EXISTING DEVICE LOCK
+        // Uses the original AttendX keys
         // -----------------------------
 
-        
-        // -----------------------------
-// LOAD LOCKED STUDENT
-// -----------------------------
+        const nameInput = document.getElementById("studentName");
+        const rollInput = document.getElementById("studentRoll");
+        const passwordInput = document.getElementById("studentPassword");
 
-        // -----------------------------
-// LOAD LOCKED STUDENT
-// -----------------------------
+        const savedName = localStorage.getItem("lockedStudentName");
+        const savedRoll = localStorage.getItem("lockedStudentRoll");
 
-        const lockedStudent = JSON.parse(
-            localStorage.getItem("lockedStudent") || "null"
-        );
-        
-        if (lockedStudent) {
-            document.getElementById("studentName").value =
-                lockedStudent.name || "";
-        
-            document.getElementById("studentRoll").value =
-                lockedStudent.rollNumber || "";
-        
-            document.getElementById("studentName").readOnly = true;
-            document.getElementById("studentRoll").readOnly = true;
+        if (savedName && savedRoll) {
+            nameInput.value = savedName;
+            rollInput.value = savedRoll;
+
+            nameInput.readOnly = true;
+            rollInput.readOnly = true;
         }
-
-// -----------------------------
-// START STUDENT QR SCANNER
-// -----------------------------
-
-// -----------------------------
-// START STUDENT QR SCANNER
-// -----------------------------
-
 
         // -----------------------------
         // START STUDENT QR SCANNER
@@ -136,51 +122,56 @@
 
         async function startStudentScanner() {
 
-            if (scannerStarting || scanProcessing) {
+            if (scannerStarting || scanProcessing || scanner) {
                 return;
             }
 
-            const name =
-                document.getElementById("studentName").value.trim();
-
-            const roll =
-                document.getElementById("studentRoll").value.trim();
-
-            const password =
-                document.getElementById("studentPassword").value.trim();
+            const name = nameInput.value.trim();
+            const roll = rollInput.value.trim();
+            const password = passwordInput.value.trim();
 
             if (!name || !roll || !password) {
                 alert("Please enter your name, roll number and password.");
                 return;
             }
 
-            
-            const existingLock = localStorage.getItem("lockedStudent");
-            
-            if (existingLock) {
-                const savedStudent = JSON.parse(existingLock);
-            
-                if (
-                    savedStudent.name !== name ||
-                    savedStudent.rollNumber !== roll
-                ) {
-                    alert("Student credentials are locked on this browser.");
+            // -----------------------------
+            // ORIGINAL DEVICE CREDENTIAL LOCK
+            // -----------------------------
+
+            const existingName =
+                localStorage.getItem("lockedStudentName");
+
+            const existingRoll =
+                localStorage.getItem("lockedStudentRoll");
+
+            if (!existingName && !existingRoll) {
+
+                // First student using this browser
+                localStorage.setItem("lockedStudentName", name);
+                localStorage.setItem("lockedStudentRoll", roll);
+
+            } else {
+
+                // Only the originally registered student can use this browser
+                if (existingName !== name || existingRoll !== roll) {
+                    alert(
+                        "This device is already registered to another student. You cannot use different credentials on this device."
+                    );
                     return;
                 }
-            } else {
-                localStorage.setItem("lockedStudent", JSON.stringify({
-                    name: name,
-                    rollNumber: roll
-                }));
             }
-            
+
+            // Save the current student for attendance processing
             localStorage.setItem("studentName", name);
             localStorage.setItem("studentRoll", roll);
-            
-            document.getElementById("studentName").readOnly = true;
-            document.getElementById("studentRoll").readOnly = true;
-            document.getElementById("studentPassword").readOnly = true;
 
+            nameInput.readOnly = true;
+            rollInput.readOnly = true;
+
+            // Do not save the password in localStorage.
+            // This page currently checks that a password was entered,
+            // but does not authenticate it against a student account.
 
             document.getElementById("scannerSection").style.display = "block";
             document.getElementById("scanButton").disabled = true;
@@ -198,7 +189,6 @@
 
                     async function(decodedText) {
 
-                        // Block repeated QR callbacks.
                         if (scanProcessing) {
                             return;
                         }
@@ -217,7 +207,7 @@
                     },
 
                     function(errorMessage) {
-                        // Normal scanner misses are ignored.
+                        // Normal QR scanning misses are ignored.
                     }
                 );
 
@@ -256,7 +246,7 @@
                     return;
                 }
 
-                // Validate that this is an AttendX QR URL.
+                // Validate AttendX QR URL
                 if (
                     qrURL.protocol !== "https:" ||
                     qrURL.hostname !== "nibhathaman.github.io" ||
@@ -303,7 +293,7 @@
         ) {
 
             try {
-                // First check whether attendance already exists.
+                // Check whether attendance already exists
                 const { data, error: checkError } = await supabaseClient
                     .from("attendance")
                     .select("id")
@@ -312,8 +302,9 @@
                     .limit(1);
 
                 if (checkError) {
-                    alert(JSON.stringify(checkError, null, 2));
                     console.error("Duplicate check failed:", checkError);
+
+                    alert("Could not verify existing attendance. Please try again.");
                     return false;
                 }
 
@@ -321,11 +312,10 @@
                     alert(
                         "Attendance has already been marked for this session."
                     );
-
                     return false;
                 }
 
-                // Insert only after the check succeeds.
+                // Insert attendance only after the check succeeds
                 const { error: insertError } = await supabaseClient
                     .from("attendance")
                     .insert([
